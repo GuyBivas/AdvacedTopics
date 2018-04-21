@@ -21,7 +21,7 @@ enum ParserMessageType
 	ParseNotPositionedAllFlags
 };
 
-// class for parsing a postioning command and hold all necessary data
+// class for parsing a postioning command, holds all necessary data
 class PostioningCommand
 {
 private:
