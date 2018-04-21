@@ -8,6 +8,35 @@ Piece* copyPiece(Piece* piece)
 	return new Piece(*piece);
 }
 
+char getPieceTypeRep(PieceType type)
+{
+	char res;
+
+	switch (type)
+	{
+	case Rock:
+		res = 'R';
+		break;
+	case Paper:
+		res = 'P';
+		break;
+	case Scissors:
+		res = 'S';
+		break;
+	case Bomb:
+		res = 'B';
+		break;
+	case Flag:
+		res = 'F';
+		break;
+	default:
+		res = '0';
+		break;
+	}
+
+	return res;
+}
+
 FightResult Piece::getFightResult(const Piece* other) const
 {
 	if (other == NULL)
@@ -34,31 +63,10 @@ FightResult Piece::getFightResult(const Piece* other) const
 	}
 }
 
-char Piece::getRep() const
-{
-	char res;
 
-	switch (type)
-	{
-	case Rock:
-		res = 'R';
-		break;
-	case Paper:
-		res = 'P';
-		break;
-	case Scissors:
-		res = 'S';
-		break;
-	case Bomb:
-		res = 'B';
-		break;
-	case Flag:
-		res = 'F';
-		break;
-	default:
-		res = '0';
-		break;
-	}
+// TODO: check if need to return capitalized or not (dependent on the player)
+char Piece::getPiece() const {
+	char res = getPieceTypeRep(type);
 
 	if (isJoker)
 		res = 'J';
@@ -68,3 +76,8 @@ char Piece::getRep() const
 
 	return res;
 }
+
+char Piece::getJokerRep() const {
+	return getPieceTypeRep(type);
+}
+

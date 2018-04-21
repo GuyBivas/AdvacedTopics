@@ -9,7 +9,7 @@
 #include "MainAux.h"
 #include "Piece.h"
 #include "Parser.h"
-#include "Game.h"
+#include "GameBoard.h"
 
 // maximum number of piece types to position on the board
 #define ROCK_COUNT 2
@@ -21,15 +21,15 @@
 
 // parse playerPositionsPath and place pieces in game.board
 // return ParserMessageType and line error number
-tuple<ParserMessageType, int> placePlayerPieces(Game* game, int playerNum, ifstream& infile);
+tuple<ParserMessageType, int> placePlayerPieces(GameBoard* game, int playerNum, ifstream& infile);
 
 // merge 2 boards into a new one
 // perform a fight in every square with a collision
-Game* gameVSgame(Game& game1, Game& game2);
+GameBoard* gameVSgame(GameBoard& game1, GameBoard& game2);
 
 // parse and apply all moves, write errors to outFile
 // return true if game is over with a winner
-bool applyAllMoves(Game& game, ifstream& movesFile1, ifstream& movesFile2, ofstream& outFile);
+bool applyAllMoves(GameBoard& game, ifstream& movesFile1, ifstream& movesFile2, ofstream& outFile);
 
 // treat writing positioning result (of parsing and placing) to outFile
 // return true if there was an error

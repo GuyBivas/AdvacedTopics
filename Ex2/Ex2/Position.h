@@ -1,37 +1,43 @@
-#ifndef Position_H
-#define Position_H
+#ifndef POSITION
+#define POSITION
 
 #include <cstdlib>
 #include <cmath>
+#include "Point.h"
+#include "Move.h"
 
 #define ROWS 10
 #define COLS 10
 
 // position on the board. the class does not know the board size
-class Position
-{
+class Position : public Point {
 private:
 	int x;
 	int y;
 
 public:
 	Position(int _x, int _y) : x(_x), y(_y) {};
+	Position(const Position& pos) : x(pos.x), y(pos.y) {};
 
-	bool operator==(Position other)
+	// getters
+	int getX() const override { return x; }
+	int getY() const override { return y; }
+
+	bool operator==(Point& other)
 	{
-		return x == other.x && y == other.y;
+		return x == other.getX() && y == other.getY();
 	}
 
-	void operator=(Position other)
+	void operator=(Point& other)
 	{
-		x = other.x;
-		y = other.y;
+		x = other.getX();
+		y = other.getY();
 	}
 
 	// difference - use Position as Vector2
-	Position operator-(Position const other) const
+	Position operator-(Point const& other) const
 	{
-		return Position(x - other.x, y - other.y);
+		return Position(x - other.getX(), y - other.getY());
 	}
 
 	// absolute value on each coordinate - use Position as Vector2
@@ -52,10 +58,29 @@ public:
 	{
 		return (x <= cols && y <= rows && x > 0 && y > 0);
 	}
+};
 
-	// getters
-	int getRow() const { return y; }
-	int getCol() const { return x; }
+
+class GameMove : public Move {
+
+private:
+	Point & from;
+	Point& to;
+
+public:
+	GameMove(Point& _from, Point& _to) : from(_from), to(_to) {};
+
+	void operator=(const GameMove& other) {
+		from = other.getFrom();
+		to = other.getTo();
+	}
+
+	virtual const Point& getFrom() const { return from; }
+	virtual const Point& getTo() const { return to; }
+
+	Position diff() const {
+		return Position(to.getX() - from.getX(), to.getY() - from.getY());
+	}
 };
 
 #endif

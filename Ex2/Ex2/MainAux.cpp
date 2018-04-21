@@ -2,7 +2,7 @@
 
 using namespace std;
 
-tuple<ParserMessageType, int> placePlayerPieces(Game* game, int playerNum, ifstream& infile)
+tuple<ParserMessageType, int> placePlayerPieces(GameBoard* game, int playerNum, ifstream& infile)
 {
 	map<PieceType, int> piecesCount = {
 	{ Rock, ROCK_COUNT },
@@ -17,7 +17,7 @@ tuple<ParserMessageType, int> placePlayerPieces(Game* game, int playerNum, ifstr
 
 	while (getline(infile, line))
 	{
-		PostioningCommand command = PostioningCommand(line);
+		PositioningCommand command = Parser::parsePositioningCommand(line);
 
 		if (command.getMessageType() != ParseOK)
 			return tuple<ParserMessageType, int>(command.getMessageType(), lineNumber);
@@ -50,9 +50,9 @@ tuple<ParserMessageType, int> placePlayerPieces(Game* game, int playerNum, ifstr
 	return tuple<ParserMessageType, int>(ParseOK, 0);
 }
 
-Game* gameVSgame(Game& game1, Game& game2)
+GameBoard* gameVSgame(GameBoard& game1, GameBoard& game2)
 {
-	Game* result = new Game();
+	GameBoard* result = new GameBoard();
 
 	for (int i = 1; i <= ROWS; i++)
 	{
@@ -95,13 +95,13 @@ Game* gameVSgame(Game& game1, Game& game2)
 // aplies the part of the move that moves the piece. In case of an error, prints the 
 // relevant messages to stdout and output file.
 // retuns true in case of game over, false otherwise.
-bool movePlayerPiece(Game& game, MoveCommand moveCommand, int lineNumber, ofstream& outFile)
+bool movePlayerPiece(GameBoard& game, MoveCommand moveCommand, int lineNumber, ofstream& outFile)
 {
 	ParserMessageType messageType = moveCommand.getMessageType();
 
 	if (messageType == ParseOK)
 	{
-		GameMessage message = game.move(moveCommand.getFrom(), moveCommand.getTo());
+		GameMessage message = game.move(moveCommand.getMove());
 		switch (message.getMessage())
 		{
 		case MoveOK:
@@ -150,7 +150,7 @@ bool movePlayerPiece(Game& game, MoveCommand moveCommand, int lineNumber, ofstre
 // aplies the part of the move that transforms the joker. In case of an error, prints the 
 // relevant messages to stdout and output file.
 // retuns true in case of game over, false otherwise.
-bool transformJokerMove(Game& game, MoveCommand moveCommand, int lineNumber, ofstream& outFile)
+bool transformJokerMove(GameBoard& game, MoveCommand moveCommand, int lineNumber, ofstream& outFile)
 {
 	GameMessage message = game.transformJoker(moveCommand.getJokerPos(), moveCommand.getJokerNewRep());
 	GameMessageType messageType = message.getMessage();
@@ -174,7 +174,7 @@ bool transformJokerMove(Game& game, MoveCommand moveCommand, int lineNumber, ofs
 // checks the status of the game. In case the game is over, prints the relevant
 // messages to output file and stdout.
 // returns true if game is over, false otherwise
-bool checkStatus(Game& game, ofstream& outFile)
+bool checkStatus(GameBoard& game, ofstream& outFile)
 {
 	GameStatus status = game.getGameStatus();
 	string message;
@@ -217,9 +217,9 @@ bool checkStatus(Game& game, ofstream& outFile)
 	return true;
 }
 
-bool applyMoveCommand(Game& game, string line, int lineNumber, ofstream& outFile)
+bool applyMoveCommand(GameBoard& game, string line, int lineNumber, ofstream& outFile)
 {
-	MoveCommand moveCommand = MoveCommand(line);
+	MoveCommand moveCommand = Parser::parseMoveCommand(line);
 	bool gameEnded = movePlayerPiece(game, moveCommand, lineNumber, outFile); // move the piece
 	if (!gameEnded)
 	{
@@ -235,7 +235,7 @@ bool applyMoveCommand(Game& game, string line, int lineNumber, ofstream& outFile
 	return true;
 }
 
-bool applyAllMoves(Game& game, ifstream& movesFile1, ifstream& movesFile2, ofstream& outFile)
+bool applyAllMoves(GameBoard& game, ifstream& movesFile1, ifstream& movesFile2, ofstream& outFile)
 {
 	bool hasMovesPlayer1 = true;
 	bool hasMovesPlayer2 = true;

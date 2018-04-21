@@ -1,6 +1,6 @@
-#include "Game.h"
+#include "GameBoard.h"
 
-string Game::getBoardRep()
+string GameBoard::getBoardRep()
 {
 	char res[ROWS * (COLS + 1) + 1];
 	int index = 0;
@@ -9,7 +9,8 @@ string Game::getBoardRep()
 	{
 		for (int j = 1; j <= COLS; j++)
 		{
-			res[index++] = getPosRep(Position(j, i));
+			Position point = Position(j, i);
+			res[index++] = getPosRep(point);
 		}
 
 		res[index++] = '\n';
@@ -20,17 +21,17 @@ string Game::getBoardRep()
 	return string(res);
 }
 
-void Game::movePiece(Position const& from, Position const& to)
+void GameBoard::movePiece(const GameMove& move)
 {
-	delete(getPieceAt(to));
+	delete(getPieceAt(move.getTo()));
 
-	Piece* fromPiece = getPieceAt(from);
-	fromPiece->setPos(to);
-	setPos(to, fromPiece);
-	setPos(from, NULL);
+	Piece* fromPiece = getPieceAt(move.getFrom());
+	fromPiece->setPos(move.getTo());
+	setPos(move.getTo(), fromPiece);
+	setPos(move.getFrom(), NULL);
 }
 
-GameMessage Game::changeJoker(Position jokerPos, PieceType newType)
+GameMessage GameBoard::changeJoker(Point& jokerPos, PieceType newType)
 {
 	Piece* joker = getPieceAt(jokerPos);
 	if (joker == NULL || joker->getIsJoker() == false || joker->getPlayerNum() != currentPlayer)
@@ -40,7 +41,7 @@ GameMessage Game::changeJoker(Position jokerPos, PieceType newType)
 	return GameMessage(MoveOK, currentPlayer);
 }
 
-int Game::getOtherPlayer() const
+int GameBoard::getOtherPlayer() const
 {
 	if (getCurrentPlayer() == 1)
 		return 2;
@@ -48,47 +49,47 @@ int Game::getOtherPlayer() const
 		return 1;
 }
 
-GameMessage Game::isValidMove(Position const& from, Position const& to)
+GameMessage GameBoard::isValidMove(const GameMove& move)
 {
-	if (!containsCurrPlayerPiece(from))
+	if (!containsCurrPlayerPiece(move.getFrom()))
 		return GameMessage(BadMoveFrom, currentPlayer);
 
-	if (containsCurrPlayerPiece(to))
+	if (containsCurrPlayerPiece(move.getTo()))
 		return GameMessage(BadMoveTo, currentPlayer);
 
-	if ((to - from).magnitude() != 1 ||
-		getPieceAt(from)->getType() == Flag || getPieceAt(from)->getType() == Bomb)
+	if (move.diff().magnitude() != 1 ||
+		getPieceAt(move.getFrom())->getType() == Flag || getPieceAt(move.getFrom())->getType() == Bomb)
 		return GameMessage(BadMovement, currentPlayer);
 
 	return GameMessage(MoveOK, currentPlayer);
 }
 
-//GameMessage Game::move(Position const& from, Position const& to, Position const& jokerPos, PieceType jokerNewType)
-GameMessage Game::move(Position const& from, Position const& to)
+//GameMessage Game::move(Point const& from, Point const& to, Point const& jokerPos, PieceType jokerNewType)
+GameMessage GameBoard::move(const GameMove& move)
 {
-	GameMessage isValidMessage = isValidMove(from, to);
+	GameMessage isValidMessage = isValidMove(move);
 	if (isValidMessage.getMessage() != MoveOK)
 		return isValidMessage;
 
-	Piece* fromPiece = getPieceAt(from);
-	Piece* toPiece = getPieceAt(to);
+	Piece* fromPiece = getPieceAt(move.getFrom());
+	Piece* toPiece = getPieceAt(move.getTo());
 	
 
 	FightResult res = fromPiece->getFightResult(toPiece);
 	switch (res)
 	{
 	case FightWin:
-		movePiece(from, to);
+		movePiece(move);
 		break;
 	case FightDraw:
-		delete(getPieceAt(from));
-		delete(getPieceAt(to));
-		setPos(from, NULL);
-		setPos(to, NULL);
+		delete(getPieceAt(move.getFrom()));
+		delete(getPieceAt(move.getTo()));
+		setPos(move.getFrom(), NULL);
+		setPos(move.getTo(), NULL);
 		break;
 	case FightLose:
-		delete(getPieceAt(from));
-		setPos(from, NULL);
+		delete(getPieceAt(move.getFrom()));
+		setPos(move.getFrom(), NULL);
 		break;
 	}
 
@@ -96,7 +97,7 @@ GameMessage Game::move(Position const& from, Position const& to)
 }
 
 
-GameMessage Game::transformJoker(Position const& jokerPos, PieceType jokerNewType) 
+GameMessage GameBoard::transformJoker(Point const&jokerPos, PieceType jokerNewType)
 {
 	Piece* joker = getPieceAt(jokerPos);
 	if (jokerNewType != -1)
@@ -108,7 +109,7 @@ GameMessage Game::transformJoker(Position const& jokerPos, PieceType jokerNewTyp
 	return GameMessage(MoveOK, currentPlayer);
 }
 
-GameStatus Game::getGameStatus()
+GameStatus GameBoard::getGameStatus()
 {
 	bool player1MovingPieces = false;
 	bool player2MovingPieces = false;
@@ -165,7 +166,7 @@ GameStatus Game::getGameStatus()
 
 }
 
-Game::Game()
+GameBoard::GameBoard()
 {
 	for (int i = 0; i < ROWS; i++)
 	{
@@ -176,7 +177,7 @@ Game::Game()
 	}
 }
 
-Game::~Game()
+GameBoard::~GameBoard()
 {
 	for (int row = 0; row < ROWS; row++)
 	{
@@ -185,4 +186,12 @@ Game::~Game()
 			delete(board[row][col]);
 		}
 	}
+}
+
+int GameBoard::getPlayer(const Point& pos) const {
+	Piece* piece = getPieceAt(pos);
+	if (piece == NULL)
+		return 0;
+	else
+		return piece->getPlayerNum();
 }

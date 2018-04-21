@@ -38,72 +38,72 @@ vector<string> split(string str, char delimiter) {
 	return splittedString;
 }
 
-PostioningCommand::PostioningCommand(string line)
-{
-	messageType = ParseInvalidCommand;
+
+PositioningCommand Parser::parsePositioningCommand(string line) {
+	ParserMessageType messageType = ParseInvalidCommand;
 	vector<string> splitted = split(line, ' ');
 	if (splitted.size() == 0 || splitted[0].length() != 1)
-		return;
+		return PositioningCommand(messageType);
 
 	PieceType piece = getPieceType(splitted[0][0]);
 	if (piece == -1)
-		return;
+		return PositioningCommand(messageType);
 
 	else if (splitted.size() == 3) // normal piece
 	{
 		if (atoi(splitted[1].c_str()) != 0 && atoi(splitted[2].c_str()) != 0)
 		{
-			Position _pos = Position(atoi(splitted[1].c_str()), atoi(splitted[2].c_str()));
-			if (!_pos.isInBoard())
+			Position pos = Position(atoi(splitted[1].c_str()), atoi(splitted[2].c_str()));
+			if (!pos.isInBoard())
 			{
 				messageType = ParseOutOfBounds;
-				return;
+				return PositioningCommand(messageType);
 			}
 			else if (piece == Joker)
-				return;
-			else 
+				return PositioningCommand(messageType);
+			else
 			{
 				messageType = ParseOK;
-				pos = _pos;
-				type = piece;
-				isJoker = false;
-				return;
+				return PositioningCommand(messageType, piece, pos, false);
 			}
 		}
 	}
 	else if (splitted.size() == 4) // joker piece
 	{
 		if (!((splitted[3].length() == 1) || (splitted[3].length() == 2 && (splitted[3][1] == '\n' || splitted[3][1] == '\r'))))
-			return;
+			return PositioningCommand(messageType);
 
 		PieceType secondPiece = getPieceType(splitted[3][0]);
 		if (piece == Joker && atoi(splitted[1].c_str()) != 0 && atoi(splitted[2].c_str()) != 0 && secondPiece != -1)
 		{
-			Position _pos = Position(atoi(splitted[1].c_str()), atoi(splitted[2].c_str()));
-			if (!_pos.isInBoard())
+			Position pos = Position(atoi(splitted[1].c_str()), atoi(splitted[2].c_str()));
+			if (!pos.isInBoard())
 			{
 				messageType = ParseOutOfBounds;
-				return;
+				return PositioningCommand(messageType);
 			}
 			else if (secondPiece == Joker || secondPiece == Flag)
 			{
 				messageType = ParseInvalidJokerRep;
+				return PositioningCommand(messageType);
 			}
 			else
 			{
 				messageType = ParseOK;
-				pos = _pos;
-				type = secondPiece;
-				isJoker = true;
-				return;
+				return PositioningCommand(messageType, secondPiece, pos, true);
 			}
 		}
 	}
+
+	return PositioningCommand(ParseInvalidCommand);
 }
 
-MoveCommand::MoveCommand(string line)
-{
-	messageType = ParseInvalidCommand;
+MoveCommand Parser::parseMoveCommand(string line) {
+	ParserMessageType messageType = ParseInvalidCommand;
+	Position pos1 = Position(-1, -1);
+	Position pos2 = Position(-1, -1);
+	GameMove move = GameMove(pos1, pos2);
+	JokerTransform jokerChange = JokerTransform(pos1, (PieceType)-1);
 
 	vector<string> splitted = split(line, ' ');
 
@@ -111,17 +111,16 @@ MoveCommand::MoveCommand(string line)
 	{
 		if (atoi(splitted[0].c_str()) != 0 && atoi(splitted[1].c_str()) != 0 && atoi(splitted[2].c_str()) != 0 && atoi(splitted[3].c_str()) != 0)
 		{
-			Position _from = Position(atoi(splitted[0].c_str()), atoi(splitted[1].c_str()));
-			Position _to = Position(atoi(splitted[2].c_str()), atoi(splitted[3].c_str()));
-			if (!_from.isInBoard() || !_to.isInBoard())
+			Position from = Position(atoi(splitted[0].c_str()), atoi(splitted[1].c_str()));
+			Position to = Position(atoi(splitted[2].c_str()), atoi(splitted[3].c_str()));
+			if (!from.isInBoard() || !to.isInBoard())
 			{
 				messageType = ParseOutOfBounds;
-				return;
+				return MoveCommand(messageType, move, jokerChange);
 			}
 			else
 			{
-				from = _from;
-				to = _to;
+				move = GameMove(from, to);
 			}
 
 			if (splitted.size() == 4)
@@ -130,24 +129,29 @@ MoveCommand::MoveCommand(string line)
 			else if (splitted.size() == 8)
 			{
 				if (!((splitted[7].length() == 1) || (splitted[7].length() == 2 && (splitted[7][1] == '\n' || splitted[7][1] == '\r'))))
-					return;
+					return MoveCommand(messageType, move, jokerChange);
 				else
 				{
 					PieceType piece = getPieceType(splitted[7][0]);
 					if (splitted[4] == "J:" && atoi(splitted[5].c_str()) != 0 && atoi(splitted[6].c_str()) != 0 && (piece == Rock || piece == Paper || piece == Scissors || piece == Bomb))
 					{
-						Position _jokerPos = Position(atoi(splitted[5].c_str()), atoi(splitted[6].c_str()));
-						if (_jokerPos.isInBoard())
+						Position jokerPos = Position(atoi(splitted[5].c_str()), atoi(splitted[6].c_str()));
+						if (jokerPos.isInBoard())
 						{
-							jokerPos = _jokerPos;
-							jokerNewRep = piece;
+							jokerChange = JokerTransform(jokerPos, piece);
 							messageType = ParseOK;
+							return MoveCommand(messageType, move, jokerChange);
 						}
-						else
+						else {
 							messageType = ParseOutOfBounds;
+							return MoveCommand(messageType, move, jokerChange);
+						}
+							
 					}
 				}
 			}
 		}
 	}
+
+	return MoveCommand(messageType, move, jokerChange);
 }

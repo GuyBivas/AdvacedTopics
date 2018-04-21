@@ -76,6 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions) _CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -115,17 +116,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Game.h" />
+    <ClInclude Include="Board.h" />
+    <ClInclude Include="Commands.h" />
+    <ClInclude Include="Fight.h" />
+    <ClInclude Include="FightInfo.h" />
+    <ClInclude Include="GameBoard.h" />
     <ClInclude Include="GameMessage.h" />
+    <ClInclude Include="JokerChange.h" />
+    <ClInclude Include="JokerTransform.h" />
     <ClInclude Include="MainAux.h" />
+    <ClInclude Include="Minimax.h" />
+    <ClInclude Include="Move.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="Piece.h" />
+    <ClInclude Include="PiecePosition.h" />
+    <ClInclude Include="PlayerAlgorithm.h" />
+    <ClInclude Include="Point.h" />
     <ClInclude Include="Position.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameBoard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainAux.cpp" />
+    <ClCompile Include="Minimax.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Piece.cpp" />
   </ItemGroup>

@@ -5,7 +5,7 @@
 #include "MainAux.h"
 #include "Piece.h"
 #include "Parser.h"
-#include "Game.h"
+#include "GameBoard.h"
 
 #define positionsPathPlayer1 "player1.rps_board"
 #define positionsPathPlayer2 "player2.rps_board"
@@ -29,8 +29,8 @@ int main()
 
 	ofstream outFile(outputPath);
 
-	Game* player1Board = new Game();
-	Game* player2Board = new Game();
+	GameBoard* player1Board = new GameBoard();
+	GameBoard* player2Board = new GameBoard();
 
 	tuple<ParserMessageType, int> tuple1 = placePlayerPieces(player1Board, 1, positionFilePlayer1);
 	tuple<ParserMessageType, int> tuple2 = placePlayerPieces(player2Board, 2, positionFilePlayer2);
@@ -47,7 +47,7 @@ int main()
 	}
 	else
 	{
-		Game* game = gameVSgame(*player1Board, *player2Board);
+		GameBoard* game = gameVSgame(*player1Board, *player2Board);
 		delete(player1Board);
 		delete(player2Board);
 

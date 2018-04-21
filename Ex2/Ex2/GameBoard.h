@@ -1,9 +1,11 @@
-#ifndef Game_H
-#define Game_H
+#ifndef GAME_BOARD
+#define GAME_BOARD
 
 #include <string>
 #include "Piece.h"
 #include "GameMessage.h"
+#include "Board.h"
+
 
 using namespace std;
 
@@ -20,17 +22,19 @@ enum GameStatus
 };
 
 // hold the game board and other game info and manage all game functionalities
-class Game
-{
+class GameBoard : public Board {
 private:
 	Piece* board[ROWS][COLS];
 	int currentPlayer = 1;
 public:
-	Game();
-	~Game();
+	GameBoard();
+	~GameBoard();
+
+
+	virtual int getPlayer(const Point& pos) const;
 
 	// wrap getPieceAt(pos) with [] operator
-	Piece* operator[](Position pos)
+	Piece* operator[](const Point& pos)
 	{
 		return getPieceAt(pos);
 	}
@@ -39,28 +43,28 @@ public:
 	string getBoardRep();
 
 	// free board[to] and set board[to] = board[from]
-	void movePiece(Position const& from, Position const& to);
+	void movePiece(const GameMove& move);
 
 	// checks if a move is valid in this board state
-	GameMessage isValidMove(Position const& from, Position const& to);
+	GameMessage isValidMove(const GameMove& move);
 
 	// treat all move aspects (validation, movePiece, fight)
-	GameMessage move(Position const &from, Position const& to);
+	GameMessage move(const GameMove& move);
 
 	// transforms the joker as part of a move
-	GameMessage transformJoker(Position const& jokerPos, PieceType jokerNewType = (PieceType)-1);
+	GameMessage transformJoker(const Point& jokerPos, PieceType jokerNewType = (PieceType)-1);
 
 	// return enum indicating whether game is over and by what reason
 	GameStatus getGameStatus();
 
 	// treat joker representation change
-	GameMessage changeJoker(Position jokerPos, PieceType newRep);
+	GameMessage changeJoker(Point& jokerPos, PieceType newRep);
 
 	// set piece in a position on the board
-	void setPos(Position pos, Piece* piece) { board[pos.getRow() - 1][pos.getCol() - 1] = piece; }
+	void setPos(const Point& pos, Piece* piece) { board[pos.getY() - 1][pos.getX() - 1] = piece; }
 
 	// check whether a position on the board contains piece of current player
-	bool containsCurrPlayerPiece(Position const pos)
+	bool containsCurrPlayerPiece(const Point& pos)
 	{
 		return isInBoard(pos) && getPieceAt(pos) != NULL && getPieceAt(pos)->getPlayerNum() == currentPlayer;
 	}
@@ -69,29 +73,28 @@ public:
 	void setCurrPlayer(int player) { currentPlayer = player; }
 
 	// check whether a position is within the board
-	bool isInBoard(Position const& pos)
+	static bool isInBoard(const Point& pos)
 	{
-		return pos.isInBoard();
-		//return pos.getRow() <= ROWS && pos.getCol() <= COLS && pos.getRow() > 0 && pos.getCol() > 0;
+		return pos.getY() <= ROWS && pos.getX() <= COLS && pos.getY() > 0 && pos.getX() > 0;
 	};
 
 	// return board[pos]
-	Piece* getPieceAt(Position pos)
+	Piece* getPieceAt(const Point& pos) const
 	{
 		if (!isInBoard(pos))
 			return NULL;
 
-		return board[pos.getRow()-1][pos.getCol()-1];
+		return board[pos.getY()-1][pos.getX()-1];
 	}
 
 	// get char representation of piece or empty representation if piece is null
-	char getPosRep(Position pos)
+	char getPosRep(Point& pos)
 	{
 		Piece* piece = getPieceAt(pos);
 		if (piece == NULL)
 			return ' ';
 
-		return piece->getRep();
+		return piece->getPiece();
 	}
 
 	int getCurrentPlayer() const { return currentPlayer; }
