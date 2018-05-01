@@ -20,6 +20,8 @@
 #define JOKER_SCORE 10
 #define FLAG_SCORE 100
 
-GameMove minimaxSuggestMove(GameBoard& game);
+//GameMove minimaxSuggestMove(GameBoard& game);
+
+int getPieceScore(Piece* piece);
 
 #endif

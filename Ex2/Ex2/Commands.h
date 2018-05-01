@@ -3,7 +3,6 @@
 
 #include "Piece.h"
 #include "Position.h"
-#include "Parser.h"
 #include "JokerTransform.h"
 
 // all outcomes of parsing postioning command or move command

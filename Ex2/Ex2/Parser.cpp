@@ -1,27 +1,5 @@
 #include "Parser.h"
 
-using namespace std;
-
-PieceType getPieceType(char c)
-{
-	switch (c)
-	{
-	case 'R':
-		return Rock;
-	case 'P':
-		return Paper;
-	case 'S':
-		return Scissors;
-	case 'B':
-		return Bomb;
-	case 'F':
-		return Flag;
-	case 'J':
-		return Joker;
-	default:
-		return (PieceType)-1;
-	}
-}
 
 vector<string> split(string str, char delimiter) {
 	vector<string> splittedString = {};
@@ -39,7 +17,7 @@ vector<string> split(string str, char delimiter) {
 }
 
 
-PositioningCommand Parser::parsePositioningCommand(string line) {
+PositioningCommand parsePositioningCommand(string line) {
 	ParserMessageType messageType = ParseInvalidCommand;
 	vector<string> splitted = split(line, ' ');
 	if (splitted.size() == 0 || splitted[0].length() != 1)
@@ -98,7 +76,7 @@ PositioningCommand Parser::parsePositioningCommand(string line) {
 	return PositioningCommand(ParseInvalidCommand);
 }
 
-MoveCommand Parser::parseMoveCommand(string line) {
+MoveCommand parseMoveCommand(string line) {
 	ParserMessageType messageType = ParseInvalidCommand;
 	Position pos1 = Position(-1, -1);
 	Position pos2 = Position(-1, -1);

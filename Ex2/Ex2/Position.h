@@ -35,7 +35,7 @@ public:
 	}
 
 	// difference - use Position as Vector2
-	Position operator-(Point const& other) const
+	Position operator-(const Point& other) const
 	{
 		return Position(x - other.getX(), y - other.getY());
 	}
@@ -58,8 +58,11 @@ public:
 	{
 		return (x <= cols && y <= rows && x > 0 && y > 0);
 	}
-};
 
+	bool operator<(const Position& o2) const {
+		return (getX() < o2.getX()) || (getY() < o2.getY());
+	}
+};
 
 class GameMove : public Move {
 

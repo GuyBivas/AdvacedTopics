@@ -10,14 +10,7 @@
 #include "Piece.h"
 #include "Parser.h"
 #include "GameBoard.h"
-
-// maximum number of piece types to position on the board
-#define ROCK_COUNT 2
-#define PAPER_COUNT 5
-#define SCISSORS_COUNT 1
-#define BOMB_COUNT 2
-#define JOKER_COUNT 2
-#define FLAG_COUNT 1
+#include "GameManager.h"
 
 // parse playerPositionsPath and place pieces in game.board
 // return ParserMessageType and line error number

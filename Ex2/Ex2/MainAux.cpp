@@ -15,9 +15,10 @@ tuple<ParserMessageType, int> placePlayerPieces(GameBoard* game, int playerNum, 
 	string line;
 	int lineNumber = 1;
 
+
 	while (getline(infile, line))
 	{
-		PositioningCommand command = Parser::parsePositioningCommand(line);
+		PositioningCommand command = parsePositioningCommand(line);
 
 		if (command.getMessageType() != ParseOK)
 			return tuple<ParserMessageType, int>(command.getMessageType(), lineNumber);
@@ -219,7 +220,7 @@ bool checkStatus(GameBoard& game, ofstream& outFile)
 
 bool applyMoveCommand(GameBoard& game, string line, int lineNumber, ofstream& outFile)
 {
-	MoveCommand moveCommand = Parser::parseMoveCommand(line);
+	MoveCommand moveCommand = parseMoveCommand(line);
 	bool gameEnded = movePlayerPiece(game, moveCommand, lineNumber, outFile); // move the piece
 	if (!gameEnded)
 	{

@@ -8,11 +8,10 @@
 #include "Piece.h"
 #include "Commands.h"
 
-static class Parser {
+using namespace std;
 
-public:
-	static PositioningCommand parsePositioningCommand(std::string line);
-	static MoveCommand parseMoveCommand(std::string line);
-};
+PositioningCommand parsePositioningCommand(string line);
+MoveCommand parseMoveCommand(string line);
+
 
 #endif

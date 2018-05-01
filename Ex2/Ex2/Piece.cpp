@@ -81,3 +81,24 @@ char Piece::getJokerRep() const {
 	return getPieceTypeRep(type);
 }
 
+
+PieceType getPieceType(char c)
+{
+	switch (c)
+	{
+	case 'R':
+		return Rock;
+	case 'P':
+		return Paper;
+	case 'S':
+		return Scissors;
+	case 'B':
+		return Bomb;
+	case 'F':
+		return Flag;
+	case 'J':
+		return Joker;
+	default:
+		return (PieceType)-1;
+	}
+}

@@ -1,5 +1,9 @@
 #include "GameBoard.h"
 
+
+
+
+
 string GameBoard::getBoardRep()
 {
 	char res[ROWS * (COLS + 1) + 1];
@@ -41,12 +45,14 @@ GameMessage GameBoard::changeJoker(Point& jokerPos, PieceType newType)
 	return GameMessage(MoveOK, currentPlayer);
 }
 
+int getOppositePlayer(int player)
+{
+	return (player == 1) ? 2 : 1;
+}
+
 int GameBoard::getOtherPlayer() const
 {
-	if (getCurrentPlayer() == 1)
-		return 2;
-	else
-		return 1;
+	return getOppositePlayer(currentPlayer);
 }
 
 GameMessage GameBoard::isValidMove(const GameMove& move)

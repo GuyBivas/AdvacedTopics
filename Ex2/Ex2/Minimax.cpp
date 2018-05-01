@@ -1,4 +1,4 @@
-//#include "Minimax.h"
+#include "Minimax.h"
 //
 //#define max(a,b) (((a) > (b)) ? (a) : (b))
 ///*
@@ -73,40 +73,40 @@
 //}
 //*/
 //
-//int getPieceScore(Piece* piece)
-//{
-//	int score;
-//
-//	if (piece == NULL)
-//		return 0;
-//	
-//	switch (piece->getType())
-//	{
-//	case Rock:
-//		score = ROCK_SCORE;
-//		break;
-//	case Paper:
-//		score = PAPER_SCORE;
-//		break;
-//	case Scissors:
-//		score = SCISSORS_SCORE;
-//		break;
-//	case Bomb:
-//		score = BOMB_SCORE;
-//		break;
-//	case Flag:
-//		score = FLAG_SCORE;
-//		break;
-//	case Joker:
-//		score = JOKER_SCORE;
-//		break;
-//	default:
-//		break;
-//	}
-//
-//	return (piece->getPlayerNum() == 1 ? score : -score);
-//}
-//
+int getPieceScore(Piece* piece)
+{
+	int score;
+
+	if (piece == NULL)
+		return 0;
+	
+	switch (piece->getType())
+	{
+	case Rock:
+		score = ROCK_SCORE;
+		break;
+	case Paper:
+		score = PAPER_SCORE;
+		break;
+	case Scissors:
+		score = SCISSORS_SCORE;
+		break;
+	case Bomb:
+		score = BOMB_SCORE;
+		break;
+	case Flag:
+		score = FLAG_SCORE;
+		break;
+	case Joker:
+		score = JOKER_SCORE;
+		break;
+	default:
+		break;
+	}
+
+	return (piece->getPlayerNum() == 1 ? score : -score);
+}
+
 //int calcBoardScore(GameBoard& game) {
 //	int score = 0;
 //	

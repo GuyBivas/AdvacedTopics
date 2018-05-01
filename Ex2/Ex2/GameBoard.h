@@ -6,8 +6,15 @@
 #include "GameMessage.h"
 #include "Board.h"
 
-
 using namespace std;
+
+// maximum number of piece types to position on the board
+#define ROCK_COUNT 2
+#define PAPER_COUNT 5
+#define SCISSORS_COUNT 1
+#define BOMB_COUNT 2
+#define JOKER_COUNT 2
+#define FLAG_COUNT 1
 
 // end game reasons (and normal status)
 enum GameStatus
@@ -26,9 +33,10 @@ class GameBoard : public Board {
 private:
 	Piece* board[ROWS][COLS];
 	int currentPlayer = 1;
+
 public:
 	GameBoard();
-	~GameBoard();
+	~GameBoard() override;
 
 
 	virtual int getPlayer(const Point& pos) const;
@@ -61,7 +69,19 @@ public:
 	GameMessage changeJoker(Point& jokerPos, PieceType newRep);
 
 	// set piece in a position on the board
-	void setPos(const Point& pos, Piece* piece) { board[pos.getY() - 1][pos.getX() - 1] = piece; }
+	void setPos(const Point& pos, Piece* piece)
+	{
+		delete(board[pos.getY() - 1][pos.getX() - 1]);
+		board[pos.getY() - 1][pos.getX() - 1] = piece;
+	}
+
+	//// set piece in a position on the board
+	//void putPiece(Piece* piece)
+	//{
+	//	const Position pos = piece->getPosition();
+	//	delete(board[pos.getY() - 1][pos.getX() - 1]);
+	//	board[pos.getY() - 1][pos.getX() - 1] = piece;
+	//}
 
 	// check whether a position on the board contains piece of current player
 	bool containsCurrPlayerPiece(const Point& pos)
@@ -102,5 +122,8 @@ public:
 	// gets the other player (of the current player)
 	int getOtherPlayer() const;
 };
+
+int getOppositePlayer(int player);
+
 
 #endif
