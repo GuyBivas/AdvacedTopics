@@ -8,7 +8,7 @@
 #include "GameBoard.h"
 #include "Commands.h"
 
-#define DEPTH 6
+#define MINIMAX_DEPTH 6
 
 #define WIN_SCORE 1000
 #define INF_SCORE 10000
@@ -20,7 +20,7 @@
 #define JOKER_SCORE 10
 #define FLAG_SCORE 100
 
-//GameMove minimaxSuggestMove(GameBoard& game);
+std::pair<MoveCommand, int> minimaxSuggestMove(GameBoard& game);
 
 int getPieceScore(Piece* piece);
 

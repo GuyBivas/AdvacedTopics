@@ -6,71 +6,56 @@
 #include "Piece.h"
 #include "Parser.h"
 #include "GameBoard.h"
+#include "AutoPlayerAlgorithm.h"
+#include "FilePlayerAlgorithm.h"
 
-#define positionsPathPlayer1 "player1.rps_board"
-#define positionsPathPlayer2 "player2.rps_board"
-#define movesPathPlayer1 "player1.rps_moves"
-#define movesPathPlayer2 "player2.rps_moves"
-#define outputPath "rps.output"
+#define OUTPUT_PATH "rps.output"
 
-int main()
+int main(int argc, char* argv[])
 {
-	ifstream positionFilePlayer1(positionsPathPlayer1);
-	ifstream positionFilePlayer2(positionsPathPlayer2);
-	ifstream movesFilePlayer1(movesPathPlayer1);
-	ifstream movesFilePlayer2(movesPathPlayer2);
+	//if (argc != 2) {
+	//	cout << "Expected 1 argument (type of game). Recieved " << argc << "." << endl;
+	//	return EXIT_FAILURE;
+	//}
 
-	if (!positionFilePlayer1.good() || !positionFilePlayer2.good() ||
-		!movesFilePlayer1.good() || !movesFilePlayer2.good())
-	{
-		cout << "Error opening files." << endl;
-		return EXIT_FAILURE;
-	}
+	PlayerAlgorithm* player1;
+	PlayerAlgorithm* player2;
 
-	ofstream outFile(outputPath);
+	//string arg = argv[0];
+	//if (arg == "auto-vs-file") {
+	//	player1 = new AutoPlayerAlgorithm();
+	//	player2 = new FilePlayerAlgorithm();
+	//}
+	//else if (arg == "file-vs-auto") {
+	//	player1 = new FilePlayerAlgorithm();
+	//	player2 = new AutoPlayerAlgorithm();
+	//}
+	//else if (arg == "auto-vs-auto") {
+	//	player1 = new AutoPlayerAlgorithm();
+	//	player2 = new AutoPlayerAlgorithm();
+	//}
+	//else if (arg == "file-vs-file") {
+	//	player1 = new FilePlayerAlgorithm();
+	//	player2 = new FilePlayerAlgorithm();
+	//}
+	//else {
+	//	cout << "Invalid command line argument." << endl;
+	//	return EXIT_FAILURE;
+	//}
 
-	GameBoard* player1Board = new GameBoard();
-	GameBoard* player2Board = new GameBoard();
+	player1 = new AutoPlayerAlgorithm();
+	player2 = new AutoPlayerAlgorithm();
 
-	tuple<ParserMessageType, int> tuple1 = placePlayerPieces(player1Board, 1, positionFilePlayer1);
-	tuple<ParserMessageType, int> tuple2 = placePlayerPieces(player2Board, 2, positionFilePlayer2);
+	ofstream outFile(OUTPUT_PATH);
 
-	positionFilePlayer1.close();
-	positionFilePlayer2.close();
+	GameManager gameManager(*player1, *player2, outFile);
 
-	bool gameEnded = printPositioningResult(tuple1, tuple2, outFile);
+	gameManager.runGame();
 
-	if (gameEnded)
-	{
-		delete(player1Board);
-		delete(player2Board);
-	}
-	else
-	{
-		GameBoard* game = gameVSgame(*player1Board, *player2Board);
-		delete(player1Board);
-		delete(player2Board);
+	outFile.close();
 
-		GameStatus status = game->getGameStatus();
-		gameEnded = printGameVsGameResult(status, outFile);
+	delete(player1);
+	delete(player2);
 
-		if (!gameEnded)
-		{
-			gameEnded = applyAllMoves(*game, movesFilePlayer1, movesFilePlayer2, outFile);
-
-			if (!gameEnded)
-			{
-				outFile << "Winner: 0" << endl;
-				outFile << "Reason: A tie - both Moves input files done without a winner" << endl;
-			}
-		}
-		
-		movesFilePlayer1.close();
-		movesFilePlayer2.close();
-
-		outFile << endl << game->getBoardRep(); // spacing line
-		outFile.close();
-		delete(game);
-		return EXIT_SUCCESS;
-	}
+	return EXIT_SUCCESS;
 }

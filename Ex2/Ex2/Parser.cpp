@@ -11,8 +11,10 @@ vector<string> split(string str, char delimiter) {
 
 		str.erase(0, pos+1); // delete the substring and the extra char of the delimiter
 	}
+
 	if (!str.empty())
 		splittedString.push_back(str);
+
 	return splittedString;
 }
 
@@ -76,7 +78,7 @@ PositioningCommand parsePositioningCommand(string line) {
 	return PositioningCommand(ParseInvalidCommand);
 }
 
-MoveCommand parseMoveCommand(string line) {
+ParserMoveCommand parseMoveCommand(string line) {
 	ParserMessageType messageType = ParseInvalidCommand;
 	Position pos1 = Position(-1, -1);
 	Position pos2 = Position(-1, -1);
@@ -94,7 +96,7 @@ MoveCommand parseMoveCommand(string line) {
 			if (!from.isInBoard() || !to.isInBoard())
 			{
 				messageType = ParseOutOfBounds;
-				return MoveCommand(messageType, move, jokerChange);
+				return ParserMoveCommand(messageType, move, jokerChange);
 			}
 			else
 			{
@@ -107,7 +109,7 @@ MoveCommand parseMoveCommand(string line) {
 			else if (splitted.size() == 8)
 			{
 				if (!((splitted[7].length() == 1) || (splitted[7].length() == 2 && (splitted[7][1] == '\n' || splitted[7][1] == '\r'))))
-					return MoveCommand(messageType, move, jokerChange);
+					return ParserMoveCommand(messageType, move, jokerChange);
 				else
 				{
 					PieceType piece = getPieceType(splitted[7][0]);
@@ -118,11 +120,11 @@ MoveCommand parseMoveCommand(string line) {
 						{
 							jokerChange = JokerTransform(jokerPos, piece);
 							messageType = ParseOK;
-							return MoveCommand(messageType, move, jokerChange);
+							return ParserMoveCommand(messageType, move, jokerChange);
 						}
 						else {
 							messageType = ParseOutOfBounds;
-							return MoveCommand(messageType, move, jokerChange);
+							return ParserMoveCommand(messageType, move, jokerChange);
 						}
 							
 					}
@@ -131,5 +133,5 @@ MoveCommand parseMoveCommand(string line) {
 		}
 	}
 
-	return MoveCommand(messageType, move, jokerChange);
+	return ParserMoveCommand(messageType, move, jokerChange);
 }

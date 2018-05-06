@@ -10,12 +10,14 @@
 #define COLS 10
 
 // position on the board. the class does not know the board size
-class Position : public Point {
+class Position : public Point
+{
 private:
 	int x;
 	int y;
 
 public:
+	Position() {};
 	Position(int _x, int _y) : x(_x), y(_y) {};
 	Position(const Position& pos) : x(pos.x), y(pos.y) {};
 
@@ -40,6 +42,11 @@ public:
 		return Position(x - other.getX(), y - other.getY());
 	}
 
+	Position operator+(const Point& other) const
+	{
+		return Position(x + other.getX(), y + other.getY());
+	}
+
 	// absolute value on each coordinate - use Position as Vector2
 	Position abs()
 	{
@@ -62,12 +69,15 @@ public:
 	bool operator<(const Position& o2) const {
 		return (getX() < o2.getX()) || (getY() < o2.getY());
 	}
+	
 };
 
-class GameMove : public Move {
+bool operator==(const Point& p1, const Point& p2);
 
+class GameMove : public Move
+{
 private:
-	Point & from;
+	Point& from;
 	Point& to;
 
 public:
@@ -77,6 +87,8 @@ public:
 		from = other.getFrom();
 		to = other.getTo();
 	}
+	
+	bool operator==(const GameMove& other) const { return from == other.getFrom() && to == other.getTo(); };
 
 	virtual const Point& getFrom() const { return from; }
 	virtual const Point& getTo() const { return to; }

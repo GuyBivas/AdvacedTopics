@@ -1,13 +1,18 @@
 #ifndef GAME_MANAGER
 #define GAME_MANAGER
 
-#include "GameBoard.h"
-#include "FilePlayerAlgorithm.h"
 #include <stdlib.h>
-#include "Parser.h"
-#include "Fight.h"
 #include <iostream>
 #include <fstream>
+#include <map>
+
+#include "FilePlayerAlgorithm.h"
+#include "Fight.h"
+#include "Parser.h"
+#include "GameBoard.h"
+#include "JokerTransform.h"
+
+#define MAX_TURNS_SINCE_FIGHT 100
 
 class GameManager {
 
@@ -16,9 +21,10 @@ private:
 	PlayerAlgorithm& player1;
 	PlayerAlgorithm& player2;
 	ofstream& outFile;
+	int turnsSinceFight = 0;
 
-	void gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_ptr<FightInfo>>& fights1, vector<unique_ptr<FightInfo>>& fights2);
-	bool movePlayerPiece(GameBoard& game, MoveCommand moveCommand, int lineNumber);
+	void gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_ptr<FightInfo>>& fights);
+	bool placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, int playerNum);
 
 public:
 
@@ -27,15 +33,13 @@ public:
 		board = GameBoard();
 	}
 
-	void initBoard(); // initializes the board by calling the init board of both players
+	bool initBoard(); // initializes the board by calling the init board of both players
 	
-	void applyMove(PlayerAlgorithm& player, int playerNum); // apply one move of the current player
+	bool applyMove(int playerNum); // apply one move of the current player
+
+	bool getJokerChange(int playerNum);
 
 	void runGame(); // controls the flow of the game
-
-
-
 };
 
-
-#endif // !GAME_MANAGER
+#endif

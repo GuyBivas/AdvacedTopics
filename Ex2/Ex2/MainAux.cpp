@@ -15,7 +15,6 @@ tuple<ParserMessageType, int> placePlayerPieces(GameBoard* game, int playerNum, 
 	string line;
 	int lineNumber = 1;
 
-
 	while (getline(infile, line))
 	{
 		PositioningCommand command = parsePositioningCommand(line);
@@ -96,7 +95,7 @@ GameBoard* gameVSgame(GameBoard& game1, GameBoard& game2)
 // aplies the part of the move that moves the piece. In case of an error, prints the 
 // relevant messages to stdout and output file.
 // retuns true in case of game over, false otherwise.
-bool movePlayerPiece(GameBoard& game, MoveCommand moveCommand, int lineNumber, ofstream& outFile)
+bool movePlayerPiece(GameBoard& game, ParserMoveCommand moveCommand, int lineNumber, ofstream& outFile)
 {
 	ParserMessageType messageType = moveCommand.getMessageType();
 
@@ -220,7 +219,7 @@ bool checkStatus(GameBoard& game, ofstream& outFile)
 
 bool applyMoveCommand(GameBoard& game, string line, int lineNumber, ofstream& outFile)
 {
-	MoveCommand moveCommand = parseMoveCommand(line);
+	ParserMoveCommand moveCommand = parseMoveCommand(line);
 	bool gameEnded = movePlayerPiece(game, moveCommand, lineNumber, outFile); // move the piece
 	if (!gameEnded)
 	{

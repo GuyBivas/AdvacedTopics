@@ -63,7 +63,7 @@ public:
 	GameMessage transformJoker(const Point& jokerPos, PieceType jokerNewType = (PieceType)-1);
 
 	// return enum indicating whether game is over and by what reason
-	GameStatus getGameStatus();
+	GameStatus getGameStatus() const;
 
 	// treat joker representation change
 	GameMessage changeJoker(Point& jokerPos, PieceType newRep);
@@ -75,13 +75,13 @@ public:
 		board[pos.getY() - 1][pos.getX() - 1] = piece;
 	}
 
-	//// set piece in a position on the board
-	//void putPiece(Piece* piece)
-	//{
-	//	const Position pos = piece->getPosition();
-	//	delete(board[pos.getY() - 1][pos.getX() - 1]);
-	//	board[pos.getY() - 1][pos.getX() - 1] = piece;
-	//}
+	// Put a piece in its position on the board
+	void putPiece(Piece* piece)
+	{
+		Position pos = (Position&)(piece->getPosition());
+		delete(board[pos.getY() - 1][pos.getX() - 1]);
+		board[pos.getY() - 1][pos.getX() - 1] = piece;
+	}
 
 	// check whether a position on the board contains piece of current player
 	bool containsCurrPlayerPiece(const Point& pos)
@@ -116,6 +116,8 @@ public:
 
 		return piece->getPiece();
 	}
+
+	bool isGameOver() const;
 
 	int getCurrentPlayer() const { return currentPlayer; }
 

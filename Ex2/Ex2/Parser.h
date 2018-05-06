@@ -11,7 +11,6 @@
 using namespace std;
 
 PositioningCommand parsePositioningCommand(string line);
-MoveCommand parseMoveCommand(string line);
-
+ParserMoveCommand parseMoveCommand(string line);
 
 #endif

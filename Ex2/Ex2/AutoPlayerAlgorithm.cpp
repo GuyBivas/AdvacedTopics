@@ -69,7 +69,7 @@ void AutoPlayerAlgorithm::notifyOnInitialBoard(const Board & b, const std::vecto
 	// handle fights
 	for (size_t i = 0; i < fights.size(); i++) {
 		auto fight = fights[i].get();
-		PieceType enemyPiece = getPieceType(fight->getOpponentPiece());
+		PieceType enemyPiece = getPieceType(fight->getPiece(getOppositePlayer(playerNum)));
 		if (fight->getWinner() == playerNum) {
 			enemyPieceCount[enemyPiece]--;
 			opponentBoard.setPos(fight->getPosition(), NULL);
@@ -87,7 +87,7 @@ void AutoPlayerAlgorithm::notifyOnInitialBoard(const Board & b, const std::vecto
 	}
 }
 
-void AutoPlayerAlgorithm::notifyOnOpponentMove(const Move & move)
+void AutoPlayerAlgorithm::notifyOnOpponentMove(const Move& move)
 {
 	((AlgoPiece*)opponentBoard.getPieceAt(move.getFrom()))->setHasMoved();
 
@@ -98,9 +98,9 @@ void AutoPlayerAlgorithm::notifyOnOpponentMove(const Move & move)
 	opponentBoard.movePiece(opMove);
 }
 
-void AutoPlayerAlgorithm::notifyFightResult(const FightInfo & fightInfo)
+void AutoPlayerAlgorithm::notifyFightResult(const FightInfo& fightInfo)
 {
-	PieceType opPieceType = getPieceType(fightInfo.getOpponentPiece());
+	PieceType opPieceType = getPieceType(fightInfo.getPiece(getOppositePlayer(playerNum)));
 
 	if (fightInfo.getWinner() == 0) { // draw
 		enemyPieceCount[opPieceType]--;
@@ -118,6 +118,50 @@ void AutoPlayerAlgorithm::notifyFightResult(const FightInfo & fightInfo)
 	}
 }
 
+unique_ptr<Move> AutoPlayerAlgorithm::getMove()
+{
+	unordered_map<MoveCommand, float> movesFrequency = {};
+
+	for (int i = 0; i < GUESS_AMOUNT; i++) {
+		GameBoard board = GameBoard();
+		guessOpponentPieces(board);
+		pair<MoveCommand, int> moveCmd = minimaxSuggestMove(board);
+		float moveVal = 1;
+		if (moveCmd.second == WIN_SCORE) { // move that led to game win gets 1.5x in frequncy val
+			moveVal = 1.5;
+		}
+
+		movesFrequency[moveCmd.first] += moveVal;
+	}
+
+	float maxFrequency = movesFrequency.begin()->second;
+	MoveCommand mostFrequentMove = movesFrequency.begin()->first;
+	for (auto move : movesFrequency) {
+		if (move.second > maxFrequency) {
+			mostFrequentMove = move.first;
+		}
+	}
+
+	lastMoveJokerChange = mostFrequentMove.getJokerTransform();
+	GameMove move = mostFrequentMove.getMove();
+	playerBoard.movePiece(move);
+
+	unique_ptr<GameMove> res = make_unique<GameMove>(move);
+	return res;
+}
+
+unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
+{
+	Piece* piece = playerBoard[lastMoveJokerChange.getJokerChangePosition()];
+	if (piece->getIsJoker()) {
+		if (piece->getJokerRep() != lastMoveJokerChange.getJokerNewRep()) {
+			playerBoard.transformJoker(lastMoveJokerChange.getJokerChangePosition(), lastMoveJokerChange.getRep());
+			return make_unique<JokerTransform>(lastMoveJokerChange);
+		}
+	}
+	
+	return nullptr;
+}
 
 AlgoPiece* chooseWithProbability(map<AlgoPiece*, int> map)
 {
@@ -145,9 +189,9 @@ PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty()
 {
 	map<PieceType, double> map = {};
 
-	map[Rock] = 1 / (enemyPieceCount[Rock] + 1);
-	map[Paper] = 1 / (enemyPieceCount[Paper] + 1);
-	map[Scissors] = 1 / (enemyPieceCount[Scissors] + 1);
+	map[Rock] = 1 / (enemyPieceCount[Rock] + 1 + JOKER_COUNT);
+	map[Paper] = 1 / (enemyPieceCount[Paper] + 1 + JOKER_COUNT);
+	map[Scissors] = 1 / (enemyPieceCount[Scissors] + 1 + JOKER_COUNT);
 	double sum = map[Rock] + map[Paper] + map[Scissors];
 
 	std::random_device rd;     // only used once to initialise (seed) engine
@@ -165,6 +209,30 @@ PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty()
 	return (PieceType)-1; // should not happen
 }
 
+void AutoPlayerAlgorithm::guessOpponentPiecesByType(GameBoard& toFill, PieceType type, function<bool(AlgoPiece*)> condition, function<int(AlgoPiece*)> probabilty)
+{
+	for (int i = 0; i < enemyPieceCount[type]; i++) {
+		map<AlgoPiece*, int> options = {};
+
+		for (int col = 1; col <= COLS; col++) {
+			for (int row = 1; row <= ROWS; row++) {
+				AlgoPiece* piece = (AlgoPiece*)opponentBoard.getPieceAt(Position(col, row));
+				if (piece != NULL && toFill.getPieceAt(Position(col, row)) == NULL && condition(piece)) {
+					options[piece] = probabilty(piece);
+				}
+			}
+		}
+
+		if (options.size() == 0)
+			return;
+
+		AlgoPiece* chosen = chooseWithProbability(options);
+		Piece* copy = new Piece(*chosen);
+		copy->setType(type);
+		toFill.putPiece(copy);
+	}
+}
+
 void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill)
 {
 	// fill known pieces:
@@ -172,52 +240,25 @@ void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill)
 		for (int row = 1; row <= ROWS; row++) {
 			AlgoPiece* piece = (AlgoPiece*)opponentBoard.getPieceAt(Position(col, row));
 			if (piece != NULL && piece->getIsKnown()) {
-				toFill.setPos(piece->getPosition(), piece);
+				Piece* copy = new Piece(*piece);
+				toFill.putPiece(copy);
 			}
 		}
 	}
 
-	// ----------------------------
+	// piece with bigger distance from center has higher probabilty to be flag
+	auto flagProb = [](AlgoPiece* p) { return (Position(ROWS / 2, COLS / 2) - p->getPosition()).magnitude(); };
+	auto uniformProb = [](AlgoPiece* p) { return 1; };
+	auto checkNotMoved = [](AlgoPiece* p) { return p->getHasMoved() == false; };
+	auto emptyCondition = [](AlgoPiece* p) { return true; };
 
-	// Guess flags and bombs: 
-	map<AlgoPiece*, int> flagBombChances = {};
-	for (int col = 1; col <= COLS; col++) {
-		for (int row = 1; row <= ROWS; row++) {
-			AlgoPiece* piece = (AlgoPiece*)opponentBoard.getPieceAt(Position(col, row));
-			if (piece != NULL && !piece->getHasMoved()) {
-				flagBombChances[piece] = (Position(ROWS / 2, COLS / 2) - piece->getPosition()).magnitude(); // piece with bigger distance from center has higher probabilty to be a flag
-			}
-		}
-	}
+	guessOpponentPiecesByType(toFill, Flag, checkNotMoved, flagProb);
+	guessOpponentPiecesByType(toFill, Bomb, checkNotMoved, uniformProb);
+	guessOpponentPiecesByType(toFill, Rock, emptyCondition, uniformProb);
+	guessOpponentPiecesByType(toFill, Paper, emptyCondition, uniformProb);
+	guessOpponentPiecesByType(toFill, Scissors, emptyCondition, uniformProb);
 
-	// ----------------------------
-
-	// guess flag - currently handles one flag only
-	AlgoPiece* flag = chooseWithProbability(flagBombChances);
-	toFill.setPos(flag->getPosition(), flag);
-
-	// ----------------------------
-
-	// guess bombs ----------------------------
-	for (int i = 0; i < enemyPieceCount[Bomb]; i++) {
-		map<AlgoPiece*, int> bombs = {};
-
-		for (int col = 1; col <= COLS; col++) {
-			for (int row = 1; row <= ROWS; row++) {
-				AlgoPiece* piece = (AlgoPiece*)opponentBoard.getPieceAt(Position(col, row));
-				if (piece != NULL && !piece->getHasMoved() && toFill.getPieceAt(Position(col, row)) == NULL) {
-					bombs[piece] = 1; // piece with  bigger distance from center has higher probabilty
-				}
-			}
-		}
-
-		AlgoPiece* bomb = chooseWithProbability(bombs);
-		toFill.setPos(bomb->getPosition(), bomb);
-	}
-
-	// ----------------------------
-
-	// guess all other pieces ----------------------------
+	// guess all remaining pieces
 	vector<AlgoPiece*> remainingPieces;
 	for (int col = 1; col <= COLS; col++) {
 		for (int row = 1; row <= ROWS; row++) {
@@ -228,22 +269,12 @@ void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill)
 		}
 	}
 
-	auto rng = std::default_random_engine{};
-	shuffle(begin(remainingPieces), end(remainingPieces), rng);
-
-	size_t i = 0;
-	for (auto pair : enemyPieceCount) {
-		if (pair.first == Bomb || pair.first == Flag) continue;
-		for (int j = 0; j < pair.second - JOKER_COUNT; j++) {
-			toFill.setPos(remainingPieces[i]->getPosition(), remainingPieces[i]);
-			i++;
-		}
-	}
-
-	while (i < remainingPieces.size()) { // fill last pieces by probabilty of occurencs (since joker can be any piece)
+	// fill last pieces by probabilty of occurencs (since joker can be any piece)
+	for (size_t i = 0; i < remainingPieces.size(); i++)
+	{
 		AlgoPiece* piece = remainingPieces[i];
-		piece->setType(choosePieceTypeProbabilty());
-		toFill.setPos(piece->getPosition(), piece);
+		Piece* copy = new Piece(*piece);
+		copy->setType(choosePieceTypeProbabilty());
+		toFill.putPiece(copy);
 	}
-	// ----------------------------
 }

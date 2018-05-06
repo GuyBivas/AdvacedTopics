@@ -2,28 +2,62 @@
 
 
 
-
-
-void placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, int playerNum) {
+bool GameManager::placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, int playerNum) {
 	vector<unique_ptr<PiecePosition>> vectorToFill;
 	player.getInitialPositions(playerNum, vectorToFill);
+
+	map<PieceType, int> piecesCount = {
+		{ Rock, ROCK_COUNT },
+		{ Paper, PAPER_COUNT },
+		{ Scissors, SCISSORS_COUNT },
+		{ Bomb, BOMB_COUNT },
+		{ Joker, JOKER_COUNT },
+		{ Flag, FLAG_COUNT } };
+
 	for (size_t i = 0; i < vectorToFill.size(); i++) {
-		PieceType type = getPieceType(vectorToFill[i].get()->getPiece());
-		Point& pos = (Point&)(vectorToFill[i].get()->getPosition());
-		Piece* piece;
+		auto piecePos = vectorToFill[i].get();
+		Piece piece(getPieceType(piecePos->getPiece()), (Position&)piecePos->getPosition(), 1, piecePos->getPiece() == 'J');
+
+		int otherPlayer = getOppositePlayer(playerNum);
+		
+		if (!((Position&)piece.getPosition()).isInBoard()) {
+			outFile << "Winner: " << otherPlayer << endl;
+			outFile << "Reason: Bad Positioning input file for player " << playerNum << endl;
+			cout << "Player " << playerNum << " lost. Positioned a piece out of board." << endl;
+			return true;
+		}
+
+		PieceType type = piece.getIsJoker() ? Joker : piece.getType();
+		piecesCount[type]--;
+		if (piecesCount[type] < 0) {
+			outFile << "Winner: " << otherPlayer << endl;
+			outFile << "Reason: Bad Positioning input file for player " << playerNum << endl;
+			cout << "Player " << playerNum << " lost. Positioned to many Pieces of type " << getPieceTypeRep(type) << "." << endl;
+			return true;
+		}
+
+		Piece* toPosition;
 
 		if (type == Joker)
-			piece = new Piece(getPieceType(vectorToFill[i].get()->getJokerRep()), pos, playerNum, true);
+			toPosition = new Piece(getPieceType(vectorToFill[i].get()->getJokerRep()), (Position&)piece.getPosition(), playerNum, true);
 		else
-			piece = new Piece(type, pos, playerNum, false);
+			toPosition = new Piece(type, (Position&)piece.getPosition(), playerNum, false);
 
-		board.setPos(vectorToFill[i].get()->getPosition(), piece);
+		if (board[toPosition->getPosition()] != NULL) {
+			outFile << "Winner: " << otherPlayer << endl;
+			outFile << "Reason: Bad Positioning input file for player " << playerNum << endl;
+			cout << "Player " << playerNum << " lost. Positioned to pieces on the same position." << endl;
+			return true;
+		}
+
+		board.setPos(vectorToFill[i].get()->getPosition(), toPosition);
 	}
+
+	return false;
 }
 
-void GameManager::gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_ptr<FightInfo>>& fights1, vector<unique_ptr<FightInfo>>& fights2)
+void GameManager::gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_ptr<FightInfo>>& fights)
 {
-
 	for (int i = 1; i <= ROWS; i++)
 	{
 		for (int j = 1; j <= COLS; j++)
@@ -39,33 +73,28 @@ void GameManager::gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_p
 				winner = piece1;
 			else
 			{
-				unique_ptr<Fight> fight1;
-				unique_ptr<Fight> fight2;
+				unique_ptr<Fight> fight;
 				switch (piece1->getFightResult(piece2))
 				{
 				case FightWin:
-					fight1 = make_unique<Fight>(pos, piece2->getType(), 1);
-					fight2 = make_unique<Fight>(pos, piece1->getType(), 1);
+					fight = make_unique<Fight>(pos, piece1->getRep(), piece2->getRep(), 1);
 					delete(piece2);
 					winner = piece1;
 					break;
 				case FightDraw:
-					fight1 = make_unique<Fight>(pos, piece2->getType(), 0);
-					fight2 = make_unique<Fight>(pos, piece1->getType(), 0);
+					fight = make_unique<Fight>(pos, piece1->getRep(), piece2->getRep(), 0);
 					delete(piece1);
 					delete(piece2);
 					winner = NULL;
 					break;
 				case FightLose:
-					fight1 = make_unique<Fight>(pos, piece2->getType(), 2);
-					fight2 = make_unique<Fight>(pos, piece1->getType(), 2);
+					fight = make_unique<Fight>(pos, piece1->getRep(), piece2->getRep(), 2);
 					delete(piece1);
 					winner = piece2;
 					break;
 				}
 
-				fights1.push_back(move(fight1));
-				fights2.push_back(move(fight2));
+				fights.push_back(move(fight));
 			}
 
 			board.setPos(pos, winner);
@@ -73,26 +102,137 @@ void GameManager::gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_p
 	}
 }
 
-void GameManager::initBoard() {
+bool GameManager::initBoard() {
+	bool gameOver;
+	
 	GameBoard playerBoard1 = GameBoard();
-	placePlayerPieces(playerBoard1, player1, 1);
+	gameOver = placePlayerPieces(playerBoard1, player1, 1);
+	if (gameOver)
+		return true;
+	
 	GameBoard playerBoard2 = GameBoard();
-	placePlayerPieces(playerBoard2, player2, 2);
+	gameOver = placePlayerPieces(playerBoard2, player2, 2);
+	if (gameOver)
+		return true;
 
-	vector<unique_ptr<FightInfo>> fights1;
-	vector<unique_ptr<FightInfo>> fights2;
-	gameVSgame(playerBoard1, playerBoard2, fights1, fights2);
-	player1.notifyOnInitialBoard(board, fights1);
-	player2.notifyOnInitialBoard(board, fights2);
+	vector<unique_ptr<FightInfo>> fights;
+	gameVSgame(playerBoard1, playerBoard2, fights);
+	player1.notifyOnInitialBoard(board, fights);
+	player2.notifyOnInitialBoard(board, fights);
+	
+	return false;
 }
 
-void GameManager::applyMove(PlayerAlgorithm& player, int playerNum) {
-
+bool GameManager::applyMove(int playerNum) {
+	PlayerAlgorithm& player = (playerNum == 1) ? player1 : player2;
 	unique_ptr<Move> move = player.getMove();
+	GameMove* realMove = (GameMove*)move.get();
 	
+	GameMessage message = board.move(*realMove);
+	if (message.getMessage() != MoveOK) {
+		outFile << "Winner: " << getOppositePlayer(playerNum) << endl;
+		outFile << "Reason: Bad Moves input file for player " << playerNum << endl;
+		cout << "Player " << playerNum << " lost. Bad move." << endl;
+		return true;
+	}
+
+	PlayerAlgorithm& opponent = (playerNum == 1) ? player2 : player1;
+
+	if (message.getFightInfo() == nullptr)
+		turnsSinceFight++;
+	else
+		turnsSinceFight = 0;
+
+	player.notifyFightResult(*message.getFightInfo());
+	
+	opponent.notifyOnOpponentMove(*realMove);
+	opponent.notifyFightResult(*message.getFightInfo());
+
+	return false;
+}
+
+bool GameManager::getJokerChange(int playerNum)
+{
+	PlayerAlgorithm& player = (playerNum == 1) ? player1 : player2;
+
+	unique_ptr<JokerChange> jokerChange = player.getJokerChange();
+	
+	if (jokerChange.get() == nullptr)
+		return false;
+	
+	else {
+		Position pos = (Position&)jokerChange.get()->getJokerChangePosition();
+		char rep = jokerChange.get()->getJokerNewRep();
+		bool validRep = (rep == 'B' || rep == 'S' || rep == 'R' || rep == 'P');
+		if (!pos.isInBoard() || board[pos]->getPlayerNum() != playerNum || !validRep) {
+			outFile << "Winner: " << getOppositePlayer(playerNum) << endl;
+			outFile << "Reason: Bad Moves input file for player " << playerNum << endl;
+			cout << "Player " << playerNum << " lost. Invalid joker change." << endl;
+			return true;
+		}
+		board.changeJoker(pos, getPieceType(rep));
+	}
+
+	return false;
 }
 
 void GameManager::runGame() {
-	initBoard();
-	//TODO: this
+	
+	bool gameOver;
+
+	gameOver = initBoard();
+	if (gameOver)
+		return;
+
+	while (!board.isGameOver()) {
+		gameOver = applyMove(board.getCurrentPlayer());
+		if (gameOver) {
+			outFile << endl << board.getBoardRep();
+			return;
+		}
+
+		if (turnsSinceFight == MAX_TURNS_SINCE_FIGHT) {
+			outFile << "Winner: 0" << endl;
+			outFile << "Reason: Maximum amount of turns without fights reached" << endl; // TODO: make sure this is really what we need to print
+			outFile << endl << board.getBoardRep();
+		}
+		
+		gameOver = getJokerChange(board.getCurrentPlayer());
+		if (gameOver) {
+			outFile << endl << board.getBoardRep();
+			return;
+		}
+
+		board.setCurrPlayer(board.getOtherPlayer());
+	}
+
+	GameStatus status = board.getGameStatus();
+	
+	switch (status)
+	{
+	case StatusPlayer1FlagsCaptured:
+		outFile << "Winner: 2" << endl;
+		outFile << "Reason: All flags of the opponent are captured" << endl;
+	case StatusPlayer2FlagsCaptured:
+		outFile << "Winner: 1" << endl;
+		outFile << "Reason: All flags of the opponent are captured" << endl;
+	case StatusBothFlagsCaptured:
+		outFile << "Winner: 0" << endl;
+		outFile << "Reason: A tie - all flags are eaten by both players in the position files" << endl;
+	case StatusPlayer1NoMovingPieces:
+		outFile << "Winner: 2" << endl;
+		outFile << "Reason: All moving PIECEs of the opponent are eaten" << endl;
+	case StatusPlayer2NoMovingPieces:
+		outFile << "Winner: 1" << endl;
+		outFile << "Reason: All moving PIECEs of the opponent are eaten" << endl;
+	case StatusBothPlayersNoMovingPieces:
+		outFile << "Winner: 0" << endl;
+		outFile << "Reason: A tie - all moving PIECEs are eaten" << endl;
+	default:
+		outFile << "Winner: 0" << endl;
+		outFile << "Reason: A tie - all moving PIECEs are eaten" << endl;
+	}
+	outFile << endl << board.getBoardRep();
+
+	return;
 }

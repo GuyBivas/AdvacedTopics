@@ -1,9 +1,5 @@
 #include "GameBoard.h"
 
-
-
-
-
 string GameBoard::getBoardRep()
 {
 	char res[ROWS * (COLS + 1) + 1];
@@ -50,6 +46,11 @@ int getOppositePlayer(int player)
 	return (player == 1) ? 2 : 1;
 }
 
+bool GameBoard::isGameOver() const
+{
+	return (getGameStatus() != StatusNormal);
+}
+
 int GameBoard::getOtherPlayer() const
 {
 	return getOppositePlayer(currentPlayer);
@@ -79,9 +80,25 @@ GameMessage GameBoard::move(const GameMove& move)
 
 	Piece* fromPiece = getPieceAt(move.getFrom());
 	Piece* toPiece = getPieceAt(move.getTo());
-	
 
 	FightResult res = fromPiece->getFightResult(toPiece);
+	Fight* fightInfo = nullptr;
+	if (toPiece != NULL) {
+		int currPlayer = getCurrentPlayer();
+		char piece1 = (fromPiece->getPlayerNum() == 1) ? fromPiece->getRep() : toPiece->getRep();
+		char piece2 = (fromPiece->getPlayerNum() == 2) ? fromPiece->getRep() : toPiece->getRep();
+		int winner;
+		if (res == FightDraw)
+			winner = 0;
+		else if (res == FightWin) {
+			winner = currPlayer;
+		}
+		else {
+			winner = getOppositePlayer(currPlayer);
+		}
+		fightInfo = new Fight((Point&)move.getTo(), piece1, piece2, winner);
+	}
+
 	switch (res)
 	{
 	case FightWin:
@@ -115,7 +132,7 @@ GameMessage GameBoard::transformJoker(Point const&jokerPos, PieceType jokerNewTy
 	return GameMessage(MoveOK, currentPlayer);
 }
 
-GameStatus GameBoard::getGameStatus()
+GameStatus GameBoard::getGameStatus() const
 {
 	bool player1MovingPieces = false;
 	bool player2MovingPieces = false;

@@ -17,7 +17,6 @@ enum ParserMessageType
 	ParseNotPositionedAllFlags
 };
 
-
 // class for parsing a postioning command, holds all necessary data
 class PositioningCommand
 {
@@ -36,7 +35,7 @@ public:
 
 	// getters
 	PieceType getType() const { return type; }
-	Point& getPos() { return pos; }
+	Position& getPos() { return pos; }
 	bool getIsJoker() const { return isJoker; }
 	ParserMessageType getMessageType() const { return messageType; }
 };
@@ -45,22 +44,44 @@ public:
 class MoveCommand
 {
 private:
-	ParserMessageType messageType;
 	GameMove move;
 	JokerTransform jokerChange;
-	//Position jokerPos;
-	//PieceType jokerNewRep = (PieceType)-1;
 
 public:
-	MoveCommand(ParserMessageType _msgType, GameMove& _move, JokerTransform& _jokerChange) :
-		messageType(_msgType), move(_move), jokerChange(_jokerChange) {};
+	MoveCommand(GameMove& _move, JokerTransform& _jokerChange) :
+		move(_move), jokerChange(_jokerChange) {};
+
+	bool operator==(const MoveCommand& other) const { return (move == other.getMove()) && (jokerChange == other.getJokerTransform()); };
 
 	// getters
-	ParserMessageType getMessageType() const { return messageType; }
 	const GameMove& getMove() const { return move; }
 	const Point& getJokerPos() const { return jokerChange.getJokerChangePosition(); }
 	PieceType getJokerNewRep() const { return jokerChange.getRep(); }
 	JokerTransform getJokerTransform() const { return jokerChange; }
 };
+
+class ParserMoveCommand : public MoveCommand {
+private:
+	ParserMessageType messageType;
+
+public:
+	ParserMoveCommand(ParserMessageType _msgType, GameMove& _move, JokerTransform& _jokerChange) :
+		MoveCommand(_move,_jokerChange),messageType(_msgType) {};
+
+	ParserMessageType getMessageType() const { return messageType; }
+};
+
+namespace std
+{
+	template <>
+	struct hash<MoveCommand>
+	{
+		size_t operator()(const MoveCommand& move) const
+		{
+			// Compute individual hash values for two data members and combine them using XOR and bit shifting
+			return ((hash<int>()(move.getMove().getFrom().getX()) ^ (hash<int>()(move.getMove().getTo().getY()) << 1)) >> 1);
+		}
+	};
+}
 
 #endif // !COMMANDS

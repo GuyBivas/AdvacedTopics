@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="AutoPlayerAlgorithm.cpp" />
     <ClCompile Include="FightInfo.cpp" />
+    <ClCompile Include="FilePlayerAlgorithm.cpp" />
     <ClCompile Include="GameBoard.cpp" />
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="main.cpp" />
@@ -148,6 +149,7 @@
     <ClCompile Include="Minimax.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Piece.cpp" />
+    <ClCompile Include="Position.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
