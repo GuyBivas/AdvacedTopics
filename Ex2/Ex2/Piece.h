@@ -27,12 +27,12 @@ class Piece : public PiecePosition
 {
 private:
 	PieceType type;
-	Point& pos;
+	Position pos;
 	int playerNum;
 	bool isJoker;
 
 public:
-	Piece(PieceType _type, Point& _pos, int _playerNum, bool _isJoker = false) :
+	Piece(PieceType _type, const Point& _pos, int _playerNum, bool _isJoker = false) :
 		type(_type), pos(_pos), playerNum(_playerNum), isJoker(_isJoker) {};
 
 	Piece(const Piece& piece) : type(piece.type), pos(piece.pos), playerNum(piece.playerNum), isJoker(piece.isJoker) {};

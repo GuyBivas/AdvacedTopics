@@ -78,7 +78,7 @@ public:
 	// Put a piece in its position on the board
 	void putPiece(Piece* piece)
 	{
-		Position pos = (Position&)(piece->getPosition());
+		Position pos = piece->getPosition();
 		delete(board[pos.getY() - 1][pos.getX() - 1]);
 		board[pos.getY() - 1][pos.getX() - 1] = piece;
 	}
@@ -86,7 +86,7 @@ public:
 	// check whether a position on the board contains piece of current player
 	bool containsCurrPlayerPiece(const Point& pos)
 	{
-		return isInBoard(pos) && getPieceAt(pos) != NULL && getPieceAt(pos)->getPlayerNum() == currentPlayer;
+		return isInBoard(pos) && getPieceAt(pos) != nullptr && getPieceAt(pos)->getPlayerNum() == currentPlayer;
 	}
 
 	// sets the current player. It is assumed function input is either 1 or 2.
@@ -102,7 +102,7 @@ public:
 	Piece* getPieceAt(const Point& pos) const
 	{
 		if (!isInBoard(pos))
-			return NULL;
+			return nullptr;
 
 		return board[pos.getY()-1][pos.getX()-1];
 	}
@@ -111,7 +111,7 @@ public:
 	char getPosRep(Point& pos)
 	{
 		Piece* piece = getPieceAt(pos);
-		if (piece == NULL)
+		if (piece == nullptr)
 			return ' ';
 
 		return piece->getPiece();

@@ -2,8 +2,8 @@
 
 Piece* copyPiece(Piece* piece)
 {
-	if (piece == NULL)
-		return NULL;
+	if (piece == nullptr)
+		return nullptr;
 
 	return new Piece(*piece);
 }
@@ -39,7 +39,7 @@ char getPieceTypeRep(PieceType type)
 
 FightResult Piece::getFightResult(const Piece* other) const
 {
-	if (other == NULL)
+	if (other == nullptr)
 		return FightWin;
 
 	if (other->type == type)
@@ -84,6 +84,9 @@ char Piece::getJokerRep() const {
 
 PieceType getPieceType(char c)
 {
+	if ('a' <= c && c <= 'z')
+		c = c + 'A' - 'a';
+	
 	switch (c)
 	{
 	case 'R':

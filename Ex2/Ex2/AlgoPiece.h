@@ -12,7 +12,7 @@ public:
 	/*Piece(PieceType _type, Point& _pos, int _playerNum, bool _isJoker = false) :
 		type(_type), pos(_pos), playerNum(_playerNum), isJoker(_isJoker) {};*/
 
-	AlgoPiece(PieceType _type, Point& _pos, int _playerNum, bool _isJoker, bool _isKnown) : Piece(_type, _pos, _playerNum, _isJoker), isKnown(_isKnown)	{ }
+	AlgoPiece(PieceType _type, const Point& _pos, int _playerNum, bool _isJoker, bool _isKnown) : Piece(_type, _pos, _playerNum, _isJoker), isKnown(_isKnown)	{ }
 
 	// getters
 	bool getIsKnown() const { return isKnown; }

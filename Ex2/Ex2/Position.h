@@ -19,7 +19,7 @@ private:
 public:
 	Position() {};
 	Position(int _x, int _y) : x(_x), y(_y) {};
-	Position(const Position& pos) : x(pos.x), y(pos.y) {};
+	Position(const Point& pos) : x(pos.getX()), y(pos.getY()) {};
 
 	// getters
 	int getX() const override { return x; }
@@ -67,9 +67,13 @@ public:
 	}
 
 	bool operator<(const Position& o2) const {
-		return (getX() < o2.getX()) || (getY() < o2.getY());
+		int size1 = getX() * COLS + getY();
+		int size2 = o2.getX() * COLS + o2.getY();
+		return size1 < size2;
+		//return ((getX() < o2.getX() && getY() < o2.getY()));// || (!(getX() < o2.getX()) && getY() < o2.getX()));
+		//return ((getX() < o2.getX() && getY() < o2.getY()) || (!(getX() < o2.getX()) && getY() < o2.getX()));
 	}
-	
+
 };
 
 bool operator==(const Point& p1, const Point& p2);
@@ -87,7 +91,7 @@ public:
 		from = other.getFrom();
 		to = other.getTo();
 	}
-	
+
 	bool operator==(const GameMove& other) const { return from == other.getFrom() && to == other.getTo(); };
 
 	virtual const Point& getFrom() const { return from; }

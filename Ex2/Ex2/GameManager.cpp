@@ -16,11 +16,13 @@ bool GameManager::placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, i
 
 	for (size_t i = 0; i < vectorToFill.size(); i++) {
 		auto piecePos = vectorToFill[i].get();
-		Piece piece(getPieceType(piecePos->getPiece()), (Position&)piecePos->getPosition(), 1, piecePos->getPiece() == 'J');
+		Position pos1 = piecePos->getPosition();
+		Piece piece = Piece(getPieceType(piecePos->getPiece()), pos1, 1, piecePos->getPiece() == 'J');
 
 		int otherPlayer = getOppositePlayer(playerNum);
 		
-		if (!((Position&)piece.getPosition()).isInBoard()) {
+		Position pos2 = piece.getPosition();
+		if (!pos2.isInBoard()) {
 			outFile << "Winner: " << otherPlayer << endl;
 			outFile << "Reason: Bad Positioning input file for player " << playerNum << endl;
 			cout << "Player " << playerNum << " lost. Positioned a piece out of board." << endl;
@@ -37,13 +39,14 @@ bool GameManager::placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, i
 		}
 
 		Piece* toPosition;
+		Position pos3 = piece.getPosition();
 
 		if (type == Joker)
-			toPosition = new Piece(getPieceType(vectorToFill[i].get()->getJokerRep()), (Position&)piece.getPosition(), playerNum, true);
+			toPosition = new Piece(getPieceType(vectorToFill[i].get()->getJokerRep()), pos3, playerNum, true);
 		else
-			toPosition = new Piece(type, (Position&)piece.getPosition(), playerNum, false);
+			toPosition = new Piece(type, pos3, playerNum, false);
 
-		if (board[toPosition->getPosition()] != NULL) {
+		if (board[toPosition->getPosition()] != nullptr) {
 			outFile << "Winner: " << otherPlayer << endl;
 			outFile << "Reason: Bad Positioning input file for player " << playerNum << endl;
 			cout << "Player " << playerNum << " lost. Positioned to pieces on the same position." << endl;
@@ -65,11 +68,11 @@ void GameManager::gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_p
 			Position pos = Position(j, i);
 			Piece* piece1 = copyPiece(game1[pos]);
 			Piece* piece2 = copyPiece(game2[pos]);
-			Piece* winner = NULL;
+			Piece* winner = nullptr;
 
-			if (piece1 == NULL)
+			if (piece1 == nullptr)
 				winner = piece2;
-			else if (piece2 == NULL)
+			else if (piece2 == nullptr)
 				winner = piece1;
 			else
 			{
@@ -85,7 +88,7 @@ void GameManager::gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_p
 					fight = make_unique<Fight>(pos, piece1->getRep(), piece2->getRep(), 0);
 					delete(piece1);
 					delete(piece2);
-					winner = NULL;
+					winner = nullptr;
 					break;
 				case FightLose:
 					fight = make_unique<Fight>(pos, piece1->getRep(), piece2->getRep(), 2);
@@ -161,7 +164,7 @@ bool GameManager::getJokerChange(int playerNum)
 		return false;
 	
 	else {
-		Position pos = (Position&)jokerChange.get()->getJokerChangePosition();
+		Position pos = jokerChange.get()->getJokerChangePosition();
 		char rep = jokerChange.get()->getJokerNewRep();
 		bool validRep = (rep == 'B' || rep == 'S' || rep == 'R' || rep == 'P');
 		if (!pos.isInBoard() || board[pos]->getPlayerNum() != playerNum || !validRep) {

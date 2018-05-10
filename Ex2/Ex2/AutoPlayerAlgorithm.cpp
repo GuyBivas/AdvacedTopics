@@ -16,19 +16,18 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 
 	map<Position, PieceType> positions = {
 		{ Position(1, 8) , Flag },
-		{ Position(2,8), Bomb },
-		{ Position(1,9), Bomb },
-		{ Position(3,9), Scissors },
-		{ Position(3,7), Rock },
-		{ Position(5,4), Rock },
-		{ Position(1,7), Paper },
-		{ Position(2,5), Paper },
-		{ Position(3,4), Paper },
-		{ Position(6,5), Paper },
-		{ Position(5,9), Paper },
-		{ Position(3,6), Joker },
-		{ Position(5,7), Joker }
-	};
+		{ Position(2, 8), Bomb },
+		{ Position(1, 9), Bomb },
+		{ Position(3, 9), Scissors },
+		{ Position(3, 7), Rock },
+		{ Position(5, 4), Rock },
+		{ Position(1, 7), Paper },
+		{ Position(2, 5), Paper },
+		{ Position(3, 4), Paper },
+		{ Position(6, 5), Paper },
+		{ Position(5, 9), Paper },
+		{ Position(3, 6), Joker },
+		{ Position(5, 7), Joker } };
 
 	std::random_device rd;     // only used once to initialise (seed) engine
 	std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
@@ -72,17 +71,17 @@ void AutoPlayerAlgorithm::notifyOnInitialBoard(const Board & b, const std::vecto
 		PieceType enemyPiece = getPieceType(fight->getPiece(getOppositePlayer(playerNum)));
 		if (fight->getWinner() == playerNum) {
 			enemyPieceCount[enemyPiece]--;
-			opponentBoard.setPos(fight->getPosition(), NULL);
+			opponentBoard.setPos(fight->getPosition(), nullptr);
 		}
 		else if (fight->getWinner() == getOppositePlayer(playerNum)) {
 			((AlgoPiece*)(opponentBoard.getPieceAt(fight->getPosition())))->setType(enemyPiece);
 			((AlgoPiece*)(opponentBoard.getPieceAt(fight->getPosition())))->setIsKnown(true);
-			playerBoard.setPos(fight->getPosition(), NULL);
+			playerBoard.setPos(fight->getPosition(), nullptr);
 		}
 		else { // draw
 			enemyPieceCount[enemyPiece]--;
-			playerBoard.setPos(fight->getPosition(), NULL);
-			opponentBoard.setPos(fight->getPosition(), NULL);
+			playerBoard.setPos(fight->getPosition(), nullptr);
+			opponentBoard.setPos(fight->getPosition(), nullptr);
 		}
 	}
 }
@@ -104,15 +103,15 @@ void AutoPlayerAlgorithm::notifyFightResult(const FightInfo& fightInfo)
 
 	if (fightInfo.getWinner() == 0) { // draw
 		enemyPieceCount[opPieceType]--;
-		playerBoard.setPos(fightInfo.getPosition(), NULL);
-		opponentBoard.setPos(fightInfo.getPosition(), NULL);
+		playerBoard.setPos(fightInfo.getPosition(), nullptr);
+		opponentBoard.setPos(fightInfo.getPosition(), nullptr);
 	}
 	else if (fightInfo.getWinner() == playerNum) {
 		enemyPieceCount[opPieceType]--;
-		opponentBoard.setPos(fightInfo.getPosition(), NULL);
+		opponentBoard.setPos(fightInfo.getPosition(), nullptr);
 	}
 	else {
-		playerBoard.setPos(fightInfo.getPosition(), NULL);
+		playerBoard.setPos(fightInfo.getPosition(), nullptr);
 		((AlgoPiece*)(opponentBoard.getPieceAt(fightInfo.getPosition())))->setType(opPieceType);
 		((AlgoPiece*)(opponentBoard.getPieceAt(fightInfo.getPosition())))->setIsKnown(true);
 	}
@@ -125,13 +124,14 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 	for (int i = 0; i < GUESS_AMOUNT; i++) {
 		GameBoard board = GameBoard();
 		guessOpponentPieces(board);
-		pair<MoveCommand, int> moveCmd = minimaxSuggestMove(board);
+		pair<MoveCommand*, int> moveCmd = minimaxSuggestMove(board);
 		float moveVal = 1;
 		if (moveCmd.second == WIN_SCORE) { // move that led to game win gets 1.5x in frequncy val
 			moveVal = 1.5;
 		}
 
-		movesFrequency[moveCmd.first] += moveVal;
+		movesFrequency[*(moveCmd.first)] += moveVal;
+		delete(moveCmd.first);
 	}
 
 	float maxFrequency = movesFrequency.begin()->second;
@@ -147,6 +147,7 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 	playerBoard.movePiece(move);
 
 	unique_ptr<GameMove> res = make_unique<GameMove>(move);
+
 	return res;
 }
 
@@ -159,7 +160,7 @@ unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
 			return make_unique<JokerTransform>(lastMoveJokerChange);
 		}
 	}
-	
+
 	return nullptr;
 }
 
@@ -178,11 +179,11 @@ AlgoPiece* chooseWithProbability(map<AlgoPiece*, int> map)
 	int tempVal = 0;
 	for (auto pair : map) {
 		tempVal += pair.second;
-		if (pair.second >= value)
+		if (tempVal >= value)
 			return pair.first;
 	}
 
-	return NULL; // should not happen
+	return nullptr; // should not happen
 }
 
 PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty()
@@ -202,7 +203,7 @@ PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty()
 	double tempVal = 0;
 	for (auto pair : map) {
 		tempVal += pair.second;
-		if (pair.second >= value)
+		if (tempVal >= value)
 			return pair.first;
 	}
 
@@ -217,7 +218,7 @@ void AutoPlayerAlgorithm::guessOpponentPiecesByType(GameBoard& toFill, PieceType
 		for (int col = 1; col <= COLS; col++) {
 			for (int row = 1; row <= ROWS; row++) {
 				AlgoPiece* piece = (AlgoPiece*)opponentBoard.getPieceAt(Position(col, row));
-				if (piece != NULL && toFill.getPieceAt(Position(col, row)) == NULL && condition(piece)) {
+				if (piece != nullptr && toFill.getPieceAt(Position(col, row)) == nullptr && condition(piece)) {
 					options[piece] = probabilty(piece);
 				}
 			}
@@ -238,9 +239,17 @@ void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill)
 	// fill known pieces:
 	for (int col = 1; col <= COLS; col++) {
 		for (int row = 1; row <= ROWS; row++) {
-			AlgoPiece* piece = (AlgoPiece*)opponentBoard.getPieceAt(Position(col, row));
-			if (piece != NULL && piece->getIsKnown()) {
-				Piece* copy = new Piece(*piece);
+			Position pos = Position(col, row);
+
+			AlgoPiece* enemyPiece = (AlgoPiece*)opponentBoard.getPieceAt(pos);
+			if (enemyPiece != nullptr && enemyPiece->getIsKnown()) {
+				Piece* copy = new Piece(*enemyPiece);
+				toFill.putPiece(copy);
+			}
+
+			Piece* playerPiece = playerBoard.getPieceAt(pos);
+			if (playerPiece != nullptr) {
+				Piece* copy = new Piece(*playerPiece);
 				toFill.putPiece(copy);
 			}
 		}
@@ -263,7 +272,7 @@ void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill)
 	for (int col = 1; col <= COLS; col++) {
 		for (int row = 1; row <= ROWS; row++) {
 			AlgoPiece* piece = (AlgoPiece*)opponentBoard.getPieceAt(Position(col, row));
-			if (piece != NULL && toFill.getPieceAt(Position(col, row)) == NULL) {
+			if (piece != nullptr && toFill.getPieceAt(Position(col, row)) == nullptr) {
 				remainingPieces.push_back(piece);
 			}
 		}

@@ -14,7 +14,7 @@ vector<Position> getPlayersJokersPos(GameBoard& game) {
 			Position pos = Position(j, i);
 			Piece* piece = game[pos];
 
-			if ((piece != NULL) && (piece->getPlayerNum() == game.getCurrentPlayer()) && (piece->getIsJoker())) {
+			if ((piece != nullptr) && (piece->getPlayerNum() == game.getCurrentPlayer()) && (piece->getIsJoker())) {
 				positions.push_back(pos);
 			}
 		}
@@ -27,7 +27,7 @@ int getPieceScore(Piece* piece)
 {
 	int score;
 
-	if (piece == NULL)
+	if (piece == nullptr)
 		return 0;
 
 	switch (piece->getType())
@@ -100,7 +100,7 @@ int getGameScore(GameBoard& game)
 	return score;
 }
 
-int minimax(GameBoard& game, int depth, int a, int b, int color, MoveCommand& command)
+int minimax(GameBoard& game, int depth, int a, int b, int color, MoveCommand* command)
 {
 	if (depth == 0 || game.isGameOver()) {
 		return getGameScore(game) * color;
@@ -114,10 +114,10 @@ int minimax(GameBoard& game, int depth, int a, int b, int color, MoveCommand& co
 			Position pos = Position(x, y);
 			Piece* piece = game[pos];
 
-			if ((piece != NULL) && (piece->getPlayerNum() == game.getCurrentPlayer()) && (piece->getIsMovingPiece())) {
+			if ((piece != nullptr) && (piece->getPlayerNum() == game.getCurrentPlayer()) && (piece->getIsMovingPiece())) {
 				for (Position direction : directions) { // go over all possible moves
 					Position to = pos + direction;
-					if (to.isInBoard() && game[to]->getPlayerNum() != game.getCurrentPlayer()) {
+					if (to.isInBoard() && (game[to] == nullptr || game[to]->getPlayerNum() != game.getCurrentPlayer())) {
 						GameBoard gameCopy = GameBoard(game);
 						GameMove move = GameMove(pos, to);
 						gameCopy.move(move);
@@ -135,7 +135,8 @@ int minimax(GameBoard& game, int depth, int a, int b, int color, MoveCommand& co
 									bestValue = moveScore;
 									if (depth == MINIMAX_DEPTH) { // update MoveCommand
 										JokerTransform jokerTrans = JokerTransform(jokerPos, newType);
-										command = MoveCommand(move, jokerTrans);
+										delete(command);
+										command = new MoveCommand(move, jokerTrans);
 									}
 								}
 
@@ -157,12 +158,9 @@ int minimax(GameBoard& game, int depth, int a, int b, int color, MoveCommand& co
 	return bestValue;
 }
 
-std::pair<MoveCommand, int> minimaxSuggestMove(GameBoard& game) {
-	Position pos = Position(-1, -1);
-	GameMove move = GameMove(pos, pos);
-	JokerTransform jokerChange = JokerTransform(pos, Rock);
-	MoveCommand command = MoveCommand(move, jokerChange);
+std::pair<MoveCommand*, int> minimaxSuggestMove(GameBoard& game) {
+	MoveCommand* command = nullptr;
 	int score = minimax(game, MINIMAX_DEPTH, -INF_SCORE, INF_SCORE, (game.getCurrentPlayer() == 1 ? 1 : -1), command);
 
-	return std::pair<MoveCommand, int>(command, score);
+	return std::pair<MoveCommand*, int>(command, score);
 }

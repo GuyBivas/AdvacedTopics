@@ -22,7 +22,7 @@ tuple<ParserMessageType, int> placePlayerPieces(GameBoard* game, int playerNum, 
 		if (command.getMessageType() != ParseOK)
 			return tuple<ParserMessageType, int>(command.getMessageType(), lineNumber);
 
-		if ((*game)[command.getPos()] != NULL)
+		if ((*game)[command.getPos()] != nullptr)
 			return tuple<ParserMessageType, int>(ParseMultiplePiecesInPos, lineNumber);
 
 		if (command.getIsJoker())
@@ -61,9 +61,9 @@ GameBoard* gameVSgame(GameBoard& game1, GameBoard& game2)
 			Position pos = Position(j, i);
 			Piece* piece1 = copyPiece(game1[pos]);
 			Piece* piece2 = copyPiece(game2[pos]);
-			Piece* winner = NULL;
+			Piece* winner = nullptr;
 
-			if (piece1 == NULL)
+			if (piece1 == nullptr)
 				winner = piece2;
 			else
 			{
@@ -76,7 +76,7 @@ GameBoard* gameVSgame(GameBoard& game1, GameBoard& game2)
 				case FightDraw:
 					delete(piece1);
 					delete(piece2);
-					winner = NULL;
+					winner = nullptr;
 					break;
 				case FightLose:
 					delete(piece1);

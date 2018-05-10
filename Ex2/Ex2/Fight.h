@@ -4,7 +4,7 @@
 #include "FightInfo.h"
 
 class Fight : public FightInfo {
-	Point& position;
+	Position position;
 	char piece1;
 	char piece2;
 	int winner;
