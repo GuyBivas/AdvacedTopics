@@ -14,7 +14,7 @@
 #include "Fight.h"
 #include "Minimax.h"
 
-#define GUESS_AMOUNT 8
+#define GUESS_AMOUNT 1
 
 using namespace std;
 

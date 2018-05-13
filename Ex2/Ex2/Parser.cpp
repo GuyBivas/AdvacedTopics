@@ -34,6 +34,7 @@ PositioningCommand parsePositioningCommand(string line) {
 		if (atoi(splitted[1].c_str()) != 0 && atoi(splitted[2].c_str()) != 0)
 		{
 			Position pos = Position(atoi(splitted[1].c_str()), atoi(splitted[2].c_str()));
+
 			if (!pos.isInBoard())
 			{
 				messageType = ParseOutOfBounds;

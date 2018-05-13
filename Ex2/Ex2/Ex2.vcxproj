@@ -140,7 +140,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AutoPlayerAlgorithm.cpp" />
-    <ClCompile Include="FightInfo.cpp" />
     <ClCompile Include="FilePlayerAlgorithm.cpp" />
     <ClCompile Include="GameBoard.cpp" />
     <ClCompile Include="GameManager.cpp" />

@@ -124,17 +124,20 @@ bool GameManager::initBoard() {
 	return false;
 }
 
-bool GameManager::applyMove(int playerNum) {
+pair<bool, bool> GameManager::applyMove(int playerNum) {
 	PlayerAlgorithm& player = (playerNum == 1) ? player1 : player2;
 	unique_ptr<Move> move = player.getMove();
 	GameMove* realMove = (GameMove*)move.get();
 	
+	if (realMove == nullptr)
+		return pair<bool, bool>(false, false);
+
 	GameMessage message = board.move(*realMove);
 	if (message.getMessage() != MoveOK) {
 		outFile << "Winner: " << getOppositePlayer(playerNum) << endl;
 		outFile << "Reason: Bad Moves input file for player " << playerNum << endl;
 		cout << "Player " << playerNum << " lost. Bad move." << endl;
-		return true;
+		return pair<bool, bool>(true, true);
 	}
 
 	PlayerAlgorithm& opponent = (playerNum == 1) ? player2 : player1;
@@ -150,21 +153,21 @@ bool GameManager::applyMove(int playerNum) {
 		opponent.notifyFightResult(*message.getFightInfo());
 	}
 
-	return false;
+	return pair<bool, bool>(false, true);;
 }
 
 bool GameManager::getJokerChange(int playerNum)
 {
 	PlayerAlgorithm& player = (playerNum == 1) ? player1 : player2;
 
-	JokerChange* jokerChange = player.getJokerChange().get();
+	unique_ptr<JokerChange> jokerChange = player.getJokerChange();
 
-	if (jokerChange == nullptr) {
+	if (jokerChange.get() == nullptr) {
 		return false;
 	}
 	else {
-		Position pos = jokerChange->getJokerChangePosition();
-		char rep = jokerChange->getJokerNewRep();
+		Position pos = jokerChange.get()->getJokerChangePosition();
+		char rep = jokerChange.get()->getJokerNewRep();
 		bool validRep = (rep == 'B' || rep == 'S' || rep == 'R' || rep == 'P');
 		if (!pos.isInBoard() || board[pos]->getPlayerNum() != playerNum || !validRep) {
 			outFile << "Winner: " << getOppositePlayer(playerNum) << endl;
@@ -172,24 +175,39 @@ bool GameManager::getJokerChange(int playerNum)
 			cout << "Player " << playerNum << " lost. Invalid joker change." << endl;
 			return true;
 		}
+
 		board.changeJoker(pos, getPieceType(rep));
 	}
 
 	return false;
 }
 
-void GameManager::runGame() {
-	
+void GameManager::runGame()
+{
 	bool gameOver;
+	bool hasLastPlayerMoved = true;
 
 	gameOver = initBoard();
 	if (gameOver)
 		return;
 
+	//board.setCurrPlayer(board.getOtherPlayer()); // TODO: remove, used for testing
+
 	while (!board.isGameOver()) {
 		cout << board.getBoardRep() << endl;
-		gameOver = applyMove(board.getCurrentPlayer());
+		pair<bool, bool> res = applyMove(board.getCurrentPlayer());
+		gameOver = res.first;
 		
+		if (!hasLastPlayerMoved && res.second == false) { // both player didnt move so game is over
+			outFile << "Winner: 0" << endl;
+			outFile << "Reason: A tie - both Moves input files done without a winner" << endl;
+			outFile << endl << board.getBoardRep();
+			return; 
+		}
+		else {
+			hasLastPlayerMoved = res.second;
+		}
+
 		if (gameOver) {
 			outFile << endl << board.getBoardRep();
 			return;
@@ -199,10 +217,13 @@ void GameManager::runGame() {
 			outFile << "Winner: 0" << endl;
 			outFile << "Reason: Maximum amount of turns without fights reached" << endl; // TODO: make sure this is really what we need to print
 			outFile << endl << board.getBoardRep();
+			return;
 		}
+
+		if (board.isGameOver())
+			break;
 		
-		getJokerChange(board.getCurrentPlayer());
-		//gameOver = getJokerChange(board.getCurrentPlayer()); // TODO:
+		gameOver = getJokerChange(board.getCurrentPlayer());
 		if (gameOver) {
 			outFile << endl << board.getBoardRep();
 			return;
@@ -212,32 +233,38 @@ void GameManager::runGame() {
 	}
 
 	GameStatus status = board.getGameStatus();
-	
 	switch (status)
 	{
 	case StatusPlayer1FlagsCaptured:
 		outFile << "Winner: 2" << endl;
 		outFile << "Reason: All flags of the opponent are captured" << endl;
+		break;
 	case StatusPlayer2FlagsCaptured:
 		outFile << "Winner: 1" << endl;
 		outFile << "Reason: All flags of the opponent are captured" << endl;
+		break;
 	case StatusBothFlagsCaptured:
 		outFile << "Winner: 0" << endl;
 		outFile << "Reason: A tie - all flags are eaten by both players in the position files" << endl;
+		break;
 	case StatusPlayer1NoMovingPieces:
 		outFile << "Winner: 2" << endl;
 		outFile << "Reason: All moving PIECEs of the opponent are eaten" << endl;
+		break;
 	case StatusPlayer2NoMovingPieces:
 		outFile << "Winner: 1" << endl;
 		outFile << "Reason: All moving PIECEs of the opponent are eaten" << endl;
+		break;
 	case StatusBothPlayersNoMovingPieces:
 		outFile << "Winner: 0" << endl;
 		outFile << "Reason: A tie - all moving PIECEs are eaten" << endl;
+		break;
 	default:
 		outFile << "Winner: 0" << endl;
 		outFile << "Reason: A tie - all moving PIECEs are eaten" << endl;
 	}
-	outFile << endl << board.getBoardRep();
 
+	outFile << endl << board.getBoardRep();
+	
 	return;
 }

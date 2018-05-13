@@ -125,7 +125,7 @@ GameMessage GameBoard::move(const GameMove& move)
 		break;
 	}
 
-	return GameMessage(MoveOK, currentPlayer);
+	return GameMessage(MoveOK, currentPlayer, fightInfo);
 }
 
 GameMessage GameBoard::transformJoker(const Point& jokerPos, PieceType jokerNewType)

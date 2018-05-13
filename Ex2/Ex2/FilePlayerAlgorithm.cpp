@@ -50,13 +50,17 @@ void FilePlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 	movesFile.close();
 
 	for (auto command : positions) {
-		Position p = command.getPos();
-		vectorToFill.push_back(make_unique<Piece>(command.getType(), p, player, command.getIsJoker()));
+		Position pos = command.getPos();
+		vectorToFill.push_back(make_unique<Piece>(command.getType(), pos, player, command.getIsJoker()));
 	}
 }
 
 unique_ptr<JokerChange> FilePlayerAlgorithm::getJokerChange()
 {
-	if (index >= moveCommands.size() || moveCommands[index].getJokerTransform().getRep() == -1) return nullptr;
+	if (index >= moveCommands.size() || moveCommands[index].getJokerTransform().getRep() == -1) {
+		index++;
+		return nullptr;
+	}
+	
 	return make_unique<JokerTransform>(moveCommands[index++].getJokerTransform());
 }

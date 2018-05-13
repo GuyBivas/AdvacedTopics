@@ -36,7 +36,9 @@ public:
 	virtual void notifyFightResult(const FightInfo& fightInfo) { }; // called only if there was a fight
 	
 	virtual unique_ptr<Move> getMove() { 
-		if (index >= moveCommands.size()) return nullptr;
+		if (index >= moveCommands.size())
+			return nullptr;
+
 		return make_unique<GameMove>(moveCommands[index].getMove()); 
 	};
 

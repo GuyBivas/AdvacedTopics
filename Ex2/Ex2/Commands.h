@@ -48,7 +48,7 @@ private:
 	JokerTransform jokerChange;
 
 public:
-	MoveCommand(GameMove& _move, JokerTransform& _jokerChange) :
+	MoveCommand(GameMove _move, JokerTransform _jokerChange) :
 		move(_move), jokerChange(_jokerChange) {};
 
 	bool operator==(const MoveCommand& other) const { return (move == other.getMove()) && (jokerChange == other.getJokerTransform()); };

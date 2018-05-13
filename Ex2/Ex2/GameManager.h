@@ -35,7 +35,7 @@ public:
 
 	bool initBoard(); // initializes the board by calling the init board of both players
 	
-	bool applyMove(int playerNum); // apply one move of the current player
+	std::pair<bool, bool> applyMove(int playerNum); // apply one move of the current player
 
 	bool getJokerChange(int playerNum);
 

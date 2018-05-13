@@ -98,9 +98,6 @@
     <ClCompile Include="Minimax.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FightInfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GameManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -1,4 +1,5 @@
 #include "AutoPlayerAlgorithm.h"
+#include <iostream>
 
 Position flipHorizontal(Position pos)
 {
@@ -13,6 +14,8 @@ Position flipVertical(Position pos)
 void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr<PiecePosition>>& vectorToFill)
 {
 	playerNum = player;
+	playerBoard.setCurrPlayer(player);
+	opponentBoard.setCurrPlayer(getOppositePlayer(player));
 
 	map<Position, PieceType> positions = {
 		{ Position(1, 8) , Flag },
@@ -56,7 +59,7 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 
 void AutoPlayerAlgorithm::notifyOnInitialBoard(const Board & b, const std::vector<unique_ptr<FightInfo>>& fights)
 {
-	// place oponent's unknown pieces
+	// place opponent's unknown pieces
 	for (int i = 1; i <= ROWS; i++) {
 		for (int j = 1; j <= COLS; j++) {
 			Position pos = Position(j, i);
@@ -107,6 +110,9 @@ void AutoPlayerAlgorithm::notifyFightResult(const FightInfo& fightInfo)
 		enemyPieceCount[opPieceType]--;
 		playerBoard.setPos(fightInfo.getPosition(), nullptr);
 		opponentBoard.setPos(fightInfo.getPosition(), nullptr);
+		if (fightInfo.getPosition() == lastMoveJokerChange.getJokerChangePosition()) {
+			lastMoveJokerChange.setRep((PieceType)-1);
+		}
 	}
 	else if (fightInfo.getWinner() == playerNum) {
 		enemyPieceCount[opPieceType]--;
@@ -116,15 +122,18 @@ void AutoPlayerAlgorithm::notifyFightResult(const FightInfo& fightInfo)
 		playerBoard.setPos(fightInfo.getPosition(), nullptr);
 		((AlgoPiece*)(opponentBoard.getPieceAt(fightInfo.getPosition())))->setType(opPieceType);
 		((AlgoPiece*)(opponentBoard.getPieceAt(fightInfo.getPosition())))->setIsKnown(true);
+		if (fightInfo.getPosition() == lastMoveJokerChange.getJokerChangePosition()) {
+			lastMoveJokerChange.setRep((PieceType)-1);
+		}
 	}
 }
 
 unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 {
 	unordered_map<MoveCommand, float> movesFrequency = {};
-
 	for (int i = 0; i < GUESS_AMOUNT; i++) {
 		GameBoard board = GameBoard();
+		board.setCurrPlayer(playerNum);
 		guessOpponentPieces(board);
 		pair<MoveCommand*, int> moveCmd = minimaxSuggestMove(board);
 		float moveVal = 1;
@@ -146,6 +155,15 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 
 	lastMoveJokerChange = mostFrequentMove.getJokerTransform();
 	GameMove move = mostFrequentMove.getMove();
+	
+	/////
+	GameMessage isValidMessage = playerBoard.isValidMove(move);
+	if (isValidMessage.getMessage() != MoveOK) {
+		isValidMessage = playerBoard.isValidMove(move);
+		int i = 3;
+	}
+
+	/////
 	playerBoard.movePiece(move);
 
 	unique_ptr<GameMove> res = make_unique<GameMove>(move);

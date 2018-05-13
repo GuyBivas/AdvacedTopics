@@ -46,6 +46,9 @@ int main(int argc, char* argv[])
 	player1 = new AutoPlayerAlgorithm();
 	player2 = new AutoPlayerAlgorithm();
 
+	//player1 = new FilePlayerAlgorithm();
+	//player2 = new FilePlayerAlgorithm();
+
 	ofstream outFile(OUTPUT_PATH);
 
 	GameManager gameManager(*player1, *player2, outFile);
@@ -57,5 +60,6 @@ int main(int argc, char* argv[])
 	delete(player1);
 	delete(player2);
 
+	getchar();
 	return EXIT_SUCCESS;
 }
