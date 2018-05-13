@@ -1,4 +1,6 @@
 #include "GameManager.h"
+#include <iostream>		//TODO: remove
+#include <windows.h>	// WinApi header
 
 bool GameManager::placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, int playerNum) {
 	vector<unique_ptr<PiecePosition>> vectorToFill;
@@ -184,6 +186,8 @@ bool GameManager::getJokerChange(int playerNum)
 
 void GameManager::runGame()
 {
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
 	bool gameOver;
 	bool hasLastPlayerMoved = true;
 
@@ -191,9 +195,9 @@ void GameManager::runGame()
 	if (gameOver)
 		return;
 
-	//board.setCurrPlayer(board.getOtherPlayer()); // TODO: remove, used for testing
-
 	while (!board.isGameOver()) {
+		SetConsoleTextAttribute(hConsole, board.getCurrentPlayer() + 10);
+
 		cout << board.getBoardRep() << endl;
 		pair<bool, bool> res = applyMove(board.getCurrentPlayer());
 		gameOver = res.first;

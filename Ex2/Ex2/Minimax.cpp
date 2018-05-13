@@ -10,10 +10,10 @@ vector<Position> getPlayersJokersPos(GameBoard* game) {
 
 	for (int i = 1; i <= ROWS; i++) {
 		for (int j = 1; j <= COLS; j++) {
-			Position pos = Position(j, i);
-			Piece* piece = game->getPieceAt(pos);
+			Piece* piece = game->getPieceAt(j, i);
 
 			if ((piece != nullptr) && (piece->getPlayerNum() == game->getCurrentPlayer()) && (piece->getIsJoker())) {
+				Position pos = Position(j, i);
 				positions.push_back(pos);
 			}
 		}
@@ -53,7 +53,8 @@ int getPieceScore(Piece* piece)
 		break;
 	}
 
-	return (piece->getPlayerNum() == 1 ? score : -score);
+	// TODO: consider this
+	return (piece->getPlayerNum() == 1 ? score-1 : -score-1); // each piece on the board reduces the score by 1, causes the alogrithm to be agressive
 }
 
 int calcBoardScore(GameBoard* game)

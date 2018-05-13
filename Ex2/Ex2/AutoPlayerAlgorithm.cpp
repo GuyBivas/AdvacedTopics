@@ -11,6 +11,21 @@ Position flipVertical(Position pos)
 	return Position(pos.getX(), ROWS + 1 - pos.getY());
 }
 
+Position getRandomPos(map<Position, PieceType> positions) {
+	std::random_device rd;   
+	std::mt19937 rng(rd());
+	std::uniform_int_distribution<int> uni(1, 10);
+
+	int x = uni(rng);
+	int y = uni(rng);
+	Position res = Position(x, y);
+
+	if (positions.find(res) == positions.end())
+		return res;
+	else
+		return getRandomPos(positions);
+}
+
 void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr<PiecePosition>>& vectorToFill)
 {
 	playerNum = player;
@@ -31,6 +46,24 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 		{ Position(5, 9), Paper },
 		{ Position(3, 6), Joker },
 		{ Position(5, 7), Joker } };
+
+	if (playerNum == 2)
+	{
+		positions = {};
+		positions[getRandomPos(positions)] = Flag;
+		positions[getRandomPos(positions)] = Bomb;
+		positions[getRandomPos(positions)] = Bomb;
+		positions[getRandomPos(positions)] = Scissors;
+		positions[getRandomPos(positions)] = Rock;
+		positions[getRandomPos(positions)] = Rock;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Joker;
+		positions[getRandomPos(positions)] = Joker;
+	}
 
 	std::random_device rd;     // only used once to initialise (seed) engine
 	std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
@@ -156,14 +189,6 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 	lastMoveJokerChange = mostFrequentMove.getJokerTransform();
 	GameMove move = mostFrequentMove.getMove();
 	
-	/////
-	GameMessage isValidMessage = playerBoard.isValidMove(move);
-	if (isValidMessage.getMessage() != MoveOK) {
-		isValidMessage = playerBoard.isValidMove(move);
-		int i = 3;
-	}
-
-	/////
 	playerBoard.movePiece(move);
 
 	unique_ptr<GameMove> res = make_unique<GameMove>(move);
@@ -173,7 +198,7 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 
 unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
 {
-	if (lastMoveJokerChange.getJokerNewRep() == -1)
+	if (lastMoveJokerChange.getRep() == -1)
 		return nullptr;
 	
 	Piece* piece = playerBoard[lastMoveJokerChange.getJokerChangePosition()];

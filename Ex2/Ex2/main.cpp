@@ -60,6 +60,6 @@ int main(int argc, char* argv[])
 	delete(player1);
 	delete(player2);
 
-	getchar();
+	//getchar();
 	return EXIT_SUCCESS;
 }

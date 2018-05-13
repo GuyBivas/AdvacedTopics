@@ -151,7 +151,7 @@ GameStatus GameBoard::getGameStatus() const
 	{
 		for (int col = 1; col <= COLS; col++)
 		{
-			Piece* piece = getPieceAt(Position(row, col));
+			Piece* piece = getPieceAt(row, col);
 			if (piece == nullptr)
 				continue;
 
