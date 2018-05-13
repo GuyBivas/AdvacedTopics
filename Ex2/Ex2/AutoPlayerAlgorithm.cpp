@@ -41,10 +41,12 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 		bool isJoker = (pair.second == Joker);
 		Position pos = pair.first;
 
-		if (horizontalFlip)
+		//if (horizontalFlip)
+		if (playerNum == 1)
 			pos = flipHorizontal(pos);
 
-		if (verticalFlip)
+		//if (verticalFlip)
+		if (playerNum == 1)
 			pos = flipVertical(pos);
 
 		vectorToFill.push_back(make_unique<Piece>((isJoker ? Scissors : pair.second), pos, playerNum, isJoker));
@@ -153,6 +155,9 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 
 unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
 {
+	if (lastMoveJokerChange.getJokerNewRep() == -1)
+		return nullptr;
+	
 	Piece* piece = playerBoard[lastMoveJokerChange.getJokerChangePosition()];
 	if (piece->getIsJoker()) {
 		if (piece->getJokerRep() != lastMoveJokerChange.getJokerNewRep()) {
@@ -186,13 +191,13 @@ AlgoPiece* chooseWithProbability(map<AlgoPiece*, int> map)
 	return nullptr; // should not happen
 }
 
-PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty()
+PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty() const
 {
 	map<PieceType, double> map = {};
 
-	map[Rock] = 1 / (enemyPieceCount[Rock] + 1 + JOKER_COUNT);
-	map[Paper] = 1 / (enemyPieceCount[Paper] + 1 + JOKER_COUNT);
-	map[Scissors] = 1 / (enemyPieceCount[Scissors] + 1 + JOKER_COUNT);
+	map[Rock] = 1 / (enemyPieceCount.at(Rock) + 1 + JOKER_COUNT);
+	map[Paper] = 1 / (enemyPieceCount.at(Paper) + 1 + JOKER_COUNT);
+	map[Scissors] = 1 / (enemyPieceCount.at(Scissors) + 1 + JOKER_COUNT);
 	double sum = map[Rock] + map[Paper] + map[Scissors];
 
 	std::random_device rd;     // only used once to initialise (seed) engine
@@ -210,9 +215,9 @@ PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty()
 	return (PieceType)-1; // should not happen
 }
 
-void AutoPlayerAlgorithm::guessOpponentPiecesByType(GameBoard& toFill, PieceType type, function<bool(AlgoPiece*)> condition, function<int(AlgoPiece*)> probabilty)
+void AutoPlayerAlgorithm::guessOpponentPiecesByType(GameBoard& toFill, PieceType type, function<bool(AlgoPiece*)> condition, function<int(AlgoPiece*)> probabilty) const
 {
-	for (int i = 0; i < enemyPieceCount[type]; i++) {
+	for (int i = 0; i < enemyPieceCount.at(type); i++) {
 		map<AlgoPiece*, int> options = {};
 
 		for (int col = 1; col <= COLS; col++) {
@@ -228,13 +233,13 @@ void AutoPlayerAlgorithm::guessOpponentPiecesByType(GameBoard& toFill, PieceType
 			return;
 
 		AlgoPiece* chosen = chooseWithProbability(options);
-		Piece* copy = new Piece(*chosen);
+		Piece* copy = copyPiece(chosen);
 		copy->setType(type);
 		toFill.putPiece(copy);
 	}
 }
 
-void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill)
+void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill) const
 {
 	// fill known pieces:
 	for (int col = 1; col <= COLS; col++) {
@@ -243,13 +248,13 @@ void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill)
 
 			AlgoPiece* enemyPiece = (AlgoPiece*)opponentBoard.getPieceAt(pos);
 			if (enemyPiece != nullptr && enemyPiece->getIsKnown()) {
-				Piece* copy = new Piece(*enemyPiece);
+				Piece* copy = copyPiece(enemyPiece);
 				toFill.putPiece(copy);
 			}
 
 			Piece* playerPiece = playerBoard.getPieceAt(pos);
 			if (playerPiece != nullptr) {
-				Piece* copy = new Piece(*playerPiece);
+				Piece* copy = copyPiece(playerPiece);
 				toFill.putPiece(copy);
 			}
 		}

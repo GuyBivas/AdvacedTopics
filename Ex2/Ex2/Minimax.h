@@ -8,7 +8,7 @@
 #include "GameBoard.h"
 #include "Commands.h"
 
-#define MINIMAX_DEPTH 6 + 6
+#define MINIMAX_DEPTH 2
 
 #define WIN_SCORE 1000
 #define INF_SCORE 10000

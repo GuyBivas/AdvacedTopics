@@ -13,7 +13,7 @@ private:
 
 public:
 	JokerTransform() { }
-	JokerTransform(Position& _pos, PieceType _type) : pos(_pos), newRep(_type) {};
+	JokerTransform(Position _pos, PieceType _type) : pos(_pos), newRep(_type) {};
 
 	bool operator==(const JokerTransform& other) const { return pos == other.getJokerChangePosition() && newRep == other.getRep(); }
 

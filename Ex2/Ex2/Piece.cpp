@@ -63,7 +63,6 @@ FightResult Piece::getFightResult(const Piece* other) const
 	}
 }
 
-
 // TODO: check if need to return capitalized or not (dependent on the player)
 char Piece::getPiece() const {
 	char res = getPieceTypeRep(type);
@@ -80,7 +79,6 @@ char Piece::getPiece() const {
 char Piece::getJokerRep() const {
 	return getPieceTypeRep(type);
 }
-
 
 PieceType getPieceType(char c)
 {

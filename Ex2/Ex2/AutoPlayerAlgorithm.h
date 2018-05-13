@@ -14,7 +14,7 @@
 #include "Fight.h"
 #include "Minimax.h"
 
-#define GUESS_AMOUNT 10
+#define GUESS_AMOUNT 8
 
 using namespace std;
 
@@ -32,9 +32,9 @@ private:
 	JokerTransform lastMoveJokerChange;
 
 
-	void guessOpponentPiecesByType(GameBoard& toFill, PieceType type, function<bool(AlgoPiece*)> condition, function<int(AlgoPiece*)> probabilty);
-	void guessOpponentPieces(GameBoard& toFill);
-	PieceType choosePieceTypeProbabilty();
+	void guessOpponentPiecesByType(GameBoard& toFill, PieceType type, function<bool(AlgoPiece*)> condition, function<int(AlgoPiece*)> probabilty) const;
+	void guessOpponentPieces(GameBoard& toFill) const;
+	PieceType choosePieceTypeProbabilty() const;
 
 public:
 	AutoPlayerAlgorithm() {}

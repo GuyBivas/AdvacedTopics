@@ -51,8 +51,7 @@ void FilePlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 
 	for (auto command : positions) {
 		Position p = command.getPos();
-		Piece piece(command.getType(), p, player, command.getIsJoker());
-		vectorToFill.push_back(make_unique<Piece>(piece));
+		vectorToFill.push_back(make_unique<Piece>(command.getType(), p, player, command.getIsJoker()));
 	}
 }
 

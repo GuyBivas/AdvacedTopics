@@ -81,8 +81,8 @@ bool operator==(const Point& p1, const Point& p2);
 class GameMove : public Move
 {
 private:
-	Point& from;
-	Point& to;
+	Position from;
+	Position to;
 
 public:
 	GameMove(Point& _from, Point& _to) : from(_from), to(_to) {};

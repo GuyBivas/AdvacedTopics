@@ -1,5 +1,16 @@
 #include "GameBoard.h"
 
+GameBoard::GameBoard(const GameBoard& boardToCopy)
+{
+	for (int i = 0; i < ROWS; i++) {
+		for (int j = 0; j < COLS; j++) {
+			board[i][j] = copyPiece(boardToCopy.board[i][j]);
+		}
+	}
+
+	currentPlayer = boardToCopy.currentPlayer;
+}
+
 string GameBoard::getBoardRep()
 {
 	char res[ROWS * (COLS + 1) + 1];
@@ -23,12 +34,11 @@ string GameBoard::getBoardRep()
 
 void GameBoard::movePiece(const GameMove& move)
 {
-	delete(getPieceAt(move.getTo()));
-
 	Piece* fromPiece = getPieceAt(move.getFrom());
 	fromPiece->setPos(move.getTo());
+
 	setPos(move.getTo(), fromPiece);
-	setPos(move.getFrom(), nullptr);
+	setPos(move.getFrom(), nullptr, false);
 }
 
 GameMessage GameBoard::changeJoker(Point& jokerPos, PieceType newType)
@@ -96,7 +106,9 @@ GameMessage GameBoard::move(const GameMove& move)
 		else {
 			winner = getOppositePlayer(currPlayer);
 		}
-		fightInfo = new Fight((Point&)move.getTo(), piece1, piece2, winner);
+
+		Position pos = move.getTo();
+		fightInfo = new Fight(pos, piece1, piece2, winner);
 	}
 
 	switch (res)
@@ -105,13 +117,10 @@ GameMessage GameBoard::move(const GameMove& move)
 		movePiece(move);
 		break;
 	case FightDraw:
-		delete(getPieceAt(move.getFrom()));
-		delete(getPieceAt(move.getTo()));
 		setPos(move.getFrom(), nullptr);
 		setPos(move.getTo(), nullptr);
 		break;
 	case FightLose:
-		delete(getPieceAt(move.getFrom()));
 		setPos(move.getFrom(), nullptr);
 		break;
 	}
@@ -119,16 +128,15 @@ GameMessage GameBoard::move(const GameMove& move)
 	return GameMessage(MoveOK, currentPlayer);
 }
 
-
-GameMessage GameBoard::transformJoker(Point const&jokerPos, PieceType jokerNewType)
+GameMessage GameBoard::transformJoker(const Point& jokerPos, PieceType jokerNewType)
 {
 	Piece* joker = getPieceAt(jokerPos);
-	if (jokerNewType != -1)
-	{
+	if (jokerNewType != -1)	{
 		if (joker == nullptr || !joker->getIsJoker())
 			return GameMessage(NoJokerInPos, currentPlayer);
 		joker->setType(jokerNewType);
 	}
+
 	return GameMessage(MoveOK, currentPlayer);
 }
 
@@ -211,7 +219,8 @@ GameBoard::~GameBoard()
 	}
 }
 
-int GameBoard::getPlayer(const Point& pos) const {
+int GameBoard::getPlayer(const Point& pos) const
+{
 	Piece* piece = getPieceAt(pos);
 	if (piece == nullptr)
 		return 0;

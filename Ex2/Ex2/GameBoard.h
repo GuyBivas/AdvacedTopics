@@ -36,8 +36,8 @@ private:
 
 public:
 	GameBoard();
+	GameBoard(const GameBoard& boardToCopy);
 	~GameBoard() override;
-
 
 	virtual int getPlayer(const Point& pos) const;
 
@@ -69,9 +69,11 @@ public:
 	GameMessage changeJoker(Point& jokerPos, PieceType newRep);
 
 	// set piece in a position on the board
-	void setPos(const Point& pos, Piece* piece)
+	void setPos(const Point& pos, Piece* piece, bool deletePos = true)
 	{
-		delete(board[pos.getY() - 1][pos.getX() - 1]);
+		if (deletePos)
+			delete(board[pos.getY() - 1][pos.getX() - 1]);
+
 		board[pos.getY() - 1][pos.getX() - 1] = piece;
 	}
 
@@ -101,10 +103,16 @@ public:
 	// return board[pos]
 	Piece* getPieceAt(const Point& pos) const
 	{
-		if (!isInBoard(pos))
-			return nullptr;
+		//if (!isInBoard(pos))
+		//	return nullptr;
 
 		return board[pos.getY()-1][pos.getX()-1];
+	}
+
+	// return board[pos]
+	Piece* getPieceAt(int x, int y) const
+	{
+		return board[y - 1][x - 1];
 	}
 
 	// get char representation of piece or empty representation if piece is null

@@ -1,7 +1,5 @@
 #include "GameManager.h"
 
-
-
 bool GameManager::placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, int playerNum) {
 	vector<unique_ptr<PiecePosition>> vectorToFill;
 	player.getInitialPositions(playerNum, vectorToFill);
@@ -141,15 +139,16 @@ bool GameManager::applyMove(int playerNum) {
 
 	PlayerAlgorithm& opponent = (playerNum == 1) ? player2 : player1;
 
-	if (message.getFightInfo() == nullptr)
+	if (message.getFightInfo() == nullptr) {
 		turnsSinceFight++;
-	else
+		opponent.notifyOnOpponentMove(*realMove);
+	}
+	else {
 		turnsSinceFight = 0;
-
-	player.notifyFightResult(*message.getFightInfo());
-	
-	opponent.notifyOnOpponentMove(*realMove);
-	opponent.notifyFightResult(*message.getFightInfo());
+		player.notifyFightResult(*message.getFightInfo());
+		opponent.notifyOnOpponentMove(*realMove);
+		opponent.notifyFightResult(*message.getFightInfo());
+	}
 
 	return false;
 }
@@ -158,14 +157,14 @@ bool GameManager::getJokerChange(int playerNum)
 {
 	PlayerAlgorithm& player = (playerNum == 1) ? player1 : player2;
 
-	unique_ptr<JokerChange> jokerChange = player.getJokerChange();
-	
-	if (jokerChange.get() == nullptr)
+	JokerChange* jokerChange = player.getJokerChange().get();
+
+	if (jokerChange == nullptr) {
 		return false;
-	
+	}
 	else {
-		Position pos = jokerChange.get()->getJokerChangePosition();
-		char rep = jokerChange.get()->getJokerNewRep();
+		Position pos = jokerChange->getJokerChangePosition();
+		char rep = jokerChange->getJokerNewRep();
 		bool validRep = (rep == 'B' || rep == 'S' || rep == 'R' || rep == 'P');
 		if (!pos.isInBoard() || board[pos]->getPlayerNum() != playerNum || !validRep) {
 			outFile << "Winner: " << getOppositePlayer(playerNum) << endl;
@@ -188,7 +187,9 @@ void GameManager::runGame() {
 		return;
 
 	while (!board.isGameOver()) {
+		cout << board.getBoardRep() << endl;
 		gameOver = applyMove(board.getCurrentPlayer());
+		
 		if (gameOver) {
 			outFile << endl << board.getBoardRep();
 			return;
@@ -200,7 +201,8 @@ void GameManager::runGame() {
 			outFile << endl << board.getBoardRep();
 		}
 		
-		gameOver = getJokerChange(board.getCurrentPlayer());
+		getJokerChange(board.getCurrentPlayer());
+		//gameOver = getJokerChange(board.getCurrentPlayer()); // TODO:
 		if (gameOver) {
 			outFile << endl << board.getBoardRep();
 			return;

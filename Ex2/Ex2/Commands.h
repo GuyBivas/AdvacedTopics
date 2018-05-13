@@ -53,6 +53,10 @@ public:
 
 	bool operator==(const MoveCommand& other) const { return (move == other.getMove()) && (jokerChange == other.getJokerTransform()); };
 
+	// setters
+	void setMove(GameMove _move) { move = _move; }
+	void setJokerTransform(JokerTransform _jokerChange) { jokerChange = _jokerChange; }
+
 	// getters
 	const GameMove& getMove() const { return move; }
 	const Point& getJokerPos() const { return jokerChange.getJokerChangePosition(); }
