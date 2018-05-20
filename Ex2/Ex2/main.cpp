@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 	PlayerAlgorithm* player1;
 	PlayerAlgorithm* player2;
 
-	string arg = argv[0];
+	string arg = argv[1];
 	if (arg == "auto-vs-file") {
 		player1 = new AutoPlayerAlgorithm();
 		player2 = new FilePlayerAlgorithm();

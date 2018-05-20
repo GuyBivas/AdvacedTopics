@@ -209,7 +209,7 @@ void GameManager::runGame()
 		//SetConsoleTextAttribute(hConsole, board.getCurrentPlayer() + 10);
 
 		//if (board.getCurrentPlayer() == 1)
-		cout << board.getBoardRep() << endl << endl;
+		//cout << board.getBoardRep() << endl << endl;
 		pair<bool, bool> res = applyMove(board.getCurrentPlayer());
 		gameOver = res.first;
 

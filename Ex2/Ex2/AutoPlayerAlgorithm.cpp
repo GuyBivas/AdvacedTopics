@@ -77,12 +77,10 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 		bool isJoker = (pair.second == Joker);
 		Position pos = pair.first;
 
-		//if (horizontalFlip)
-		if (playerNum == 2)
+		if (horizontalFlip)
 			pos = flipHorizontal(pos);
 
-		//if (verticalFlip)
-		if (playerNum == 2)
+		if (verticalFlip)
 			pos = flipVertical(pos);
 
 		vectorToFill.push_back(make_unique<Piece>((isJoker ? Scissors : pair.second), pos, playerNum, isJoker));
@@ -321,9 +319,9 @@ void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill) const
 
 	// piece with bigger distance from center has higher probabilty to be flag
 	auto flagProb = [](AlgoPiece* p) { return (Position(ROWS / 2, COLS / 2) - p->getPosition()).magnitude(); };
-	auto uniformProb = [](AlgoPiece* p) { return 1; };
+	auto uniformProb = [](AlgoPiece* p) { if (p == nullptr) return 1; else return 1; };
 	auto checkNotMoved = [](AlgoPiece* p) { return p->getHasMoved() == false; };
-	auto emptyCondition = [](AlgoPiece* p) { return true; };
+	auto emptyCondition = [](AlgoPiece* p) {  if (p == nullptr) return true; else return true; };
 
 	guessOpponentPiecesByType(toFill, Flag, checkNotMoved, flagProb);
 	guessOpponentPiecesByType(toFill, Bomb, checkNotMoved, uniformProb);
