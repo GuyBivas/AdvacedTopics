@@ -14,7 +14,7 @@
 #include "Fight.h"
 #include "Minimax.h"
 
-#define GUESS_AMOUNT 4
+#define GUESS_AMOUNT 8
 
 using namespace std;
 
@@ -46,6 +46,8 @@ public:
 	virtual unique_ptr<JokerChange> getJokerChange(); // nullptr if no change is requested
 	virtual ~AutoPlayerAlgorithm() { }
 };
+
+AlgoPiece* copyAlgoPiece(AlgoPiece* piece);
 
 
 #endif

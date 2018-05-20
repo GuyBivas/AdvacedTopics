@@ -2,26 +2,29 @@
 #define MINIMAX
 
 #include <stdlib.h>
+#include <iostream>
 #include <stdbool.h>
 #include <vector>
+#include <random>
+
 #include "Position.h"
 #include "GameBoard.h"
+#include "AlgoPiece.h"
 #include "Commands.h"
 
-#define MINIMAX_DEPTH 3
+#define MINIMAX_DEPTH 2
 
-#define WIN_SCORE 1000
-#define INF_SCORE 10000
 
-#define PAPER_SCORE 2
-#define ROCK_SCORE 3
-#define SCISSORS_SCORE 6
-#define BOMB_SCORE 3
-#define JOKER_SCORE 10
-#define FLAG_SCORE 100
+#define WIN_SCORE 10000
+#define INF_SCORE 100000
 
-std::pair<MoveCommand*, int> minimaxSuggestMove(GameBoard& game);
+#define PAPER_SCORE 20
+#define ROCK_SCORE 30
+#define SCISSORS_SCORE 60
+#define BOMB_SCORE 30
+#define JOKER_SCORE 100
+#define FLAG_SCORE 1000
 
-int getPieceScore(Piece* piece);
+std::pair<MoveCommand*, float> minimaxSuggestMove(GameBoard& game);
 
 #endif

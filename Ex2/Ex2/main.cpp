@@ -2,6 +2,7 @@
 #include <fstream>
 #include <map>
 #include <iostream>
+
 #include "MainAux.h"
 #include "Piece.h"
 #include "Parser.h"
@@ -13,38 +14,40 @@
 
 int main(int argc, char* argv[])
 {
-	//if (argc != 2) {
-	//	cout << "Expected 1 argument (type of game). Recieved " << argc << "." << endl;
-	//	return EXIT_FAILURE;
-	//}
+	if (argc != 2) {
+		cout << "Expected 1 argument (type of game). Recieved " << argc - 1 << "." << endl;
+		return EXIT_FAILURE;
+	}
+
+	//LOGFILE = ofstream("LOGFILE4");
 
 	PlayerAlgorithm* player1;
 	PlayerAlgorithm* player2;
 
-	//string arg = argv[0];
-	//if (arg == "auto-vs-file") {
-	//	player1 = new AutoPlayerAlgorithm();
-	//	player2 = new FilePlayerAlgorithm();
-	//}
-	//else if (arg == "file-vs-auto") {
-	//	player1 = new FilePlayerAlgorithm();
-	//	player2 = new AutoPlayerAlgorithm();
-	//}
-	//else if (arg == "auto-vs-auto") {
-	//	player1 = new AutoPlayerAlgorithm();
-	//	player2 = new AutoPlayerAlgorithm();
-	//}
-	//else if (arg == "file-vs-file") {
-	//	player1 = new FilePlayerAlgorithm();
-	//	player2 = new FilePlayerAlgorithm();
-	//}
-	//else {
-	//	cout << "Invalid command line argument." << endl;
-	//	return EXIT_FAILURE;
-	//}
+	string arg = argv[0];
+	if (arg == "auto-vs-file") {
+		player1 = new AutoPlayerAlgorithm();
+		player2 = new FilePlayerAlgorithm();
+	}
+	else if (arg == "file-vs-auto") {
+		player1 = new FilePlayerAlgorithm();
+		player2 = new AutoPlayerAlgorithm();
+	}
+	else if (arg == "auto-vs-auto") {
+		player1 = new AutoPlayerAlgorithm();
+		player2 = new AutoPlayerAlgorithm();
+	}
+	else if (arg == "file-vs-file") {
+		player1 = new FilePlayerAlgorithm();
+		player2 = new FilePlayerAlgorithm();
+	}
+	else {
+		cout << "Invalid command line argument." << endl;
+		return EXIT_FAILURE;
+	}
 
-	player1 = new AutoPlayerAlgorithm();
-	player2 = new AutoPlayerAlgorithm();
+	//player1 = new AutoPlayerAlgorithm();
+	//player2 = new AutoPlayerAlgorithm();
 
 	//player1 = new FilePlayerAlgorithm();
 	//player2 = new FilePlayerAlgorithm();
@@ -60,6 +63,5 @@ int main(int argc, char* argv[])
 	delete(player1);
 	delete(player2);
 
-	//getchar();
 	return EXIT_SUCCESS;
 }

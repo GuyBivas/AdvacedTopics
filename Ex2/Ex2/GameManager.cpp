@@ -1,10 +1,17 @@
 #include "GameManager.h"
-#include <iostream>		//TODO: remove
-#include <windows.h>	// WinApi header
+//#include <iostream>		//TODO: remove
+//#include <windows.h>	// WinApi header
 
 bool GameManager::placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, int playerNum) {
 	vector<unique_ptr<PiecePosition>> vectorToFill;
 	player.getInitialPositions(playerNum, vectorToFill);
+
+	if (vectorToFill.empty()) {
+		outFile << "Winner: " << getOppositePlayer(playerNum) << endl;
+		outFile << "Reason: Bad Positioning input file for player " << playerNum << endl;
+		cout << "Player " << playerNum << " lost. Positioned a piece out of board." << endl;
+		return true;
+	}
 
 	map<PieceType, int> piecesCount = {
 		{ Rock, ROCK_COUNT },
@@ -20,7 +27,7 @@ bool GameManager::placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, i
 		Piece piece = Piece(getPieceType(piecePos->getPiece()), pos1, 1, piecePos->getPiece() == 'J');
 
 		int otherPlayer = getOppositePlayer(playerNum);
-		
+
 		Position pos2 = piece.getPosition();
 		if (!pos2.isInBoard()) {
 			outFile << "Winner: " << otherPlayer << endl;
@@ -107,12 +114,12 @@ void GameManager::gameVSgame(GameBoard& game1, GameBoard& game2, vector<unique_p
 
 bool GameManager::initBoard() {
 	bool gameOver;
-	
+
 	GameBoard playerBoard1 = GameBoard();
 	gameOver = placePlayerPieces(playerBoard1, player1, 1);
 	if (gameOver)
 		return true;
-	
+
 	GameBoard playerBoard2 = GameBoard();
 	gameOver = placePlayerPieces(playerBoard2, player2, 2);
 	if (gameOver)
@@ -122,7 +129,7 @@ bool GameManager::initBoard() {
 	gameVSgame(playerBoard1, playerBoard2, fights);
 	player1.notifyOnInitialBoard(board, fights);
 	player2.notifyOnInitialBoard(board, fights);
-	
+
 	return false;
 }
 
@@ -130,7 +137,7 @@ pair<bool, bool> GameManager::applyMove(int playerNum) {
 	PlayerAlgorithm& player = (playerNum == 1) ? player1 : player2;
 	unique_ptr<Move> move = player.getMove();
 	GameMove* realMove = (GameMove*)move.get();
-	
+
 	if (realMove == nullptr)
 		return pair<bool, bool>(false, false);
 
@@ -186,7 +193,7 @@ bool GameManager::getJokerChange(int playerNum)
 
 void GameManager::runGame()
 {
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	//HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	bool gameOver;
 	bool hasLastPlayerMoved = true;
@@ -196,17 +203,21 @@ void GameManager::runGame()
 		return;
 
 	while (!board.isGameOver()) {
-		SetConsoleTextAttribute(hConsole, board.getCurrentPlayer() + 10);
+		//getchar();
+		//LOGFILE << "New turn in runGame" << endl;
+		
+		//SetConsoleTextAttribute(hConsole, board.getCurrentPlayer() + 10);
 
-		cout << board.getBoardRep() << endl;
+		//if (board.getCurrentPlayer() == 1)
+		cout << board.getBoardRep() << endl << endl;
 		pair<bool, bool> res = applyMove(board.getCurrentPlayer());
 		gameOver = res.first;
-		
+
 		if (!hasLastPlayerMoved && res.second == false) { // both player didnt move so game is over
 			outFile << "Winner: 0" << endl;
 			outFile << "Reason: A tie - both Moves input files done without a winner" << endl;
 			outFile << endl << board.getBoardRep();
-			return; 
+			return;
 		}
 		else {
 			hasLastPlayerMoved = res.second;
@@ -226,7 +237,7 @@ void GameManager::runGame()
 
 		if (board.isGameOver())
 			break;
-		
+
 		gameOver = getJokerChange(board.getCurrentPlayer());
 		if (gameOver) {
 			outFile << endl << board.getBoardRep();
@@ -235,6 +246,8 @@ void GameManager::runGame()
 
 		board.setCurrPlayer(board.getOtherPlayer());
 	}
+
+	//LOGFILE << "Exited while loop in runGame" << endl;
 
 	GameStatus status = board.getGameStatus();
 	switch (status)
@@ -269,6 +282,8 @@ void GameManager::runGame()
 	}
 
 	outFile << endl << board.getBoardRep();
-	
+
+	//LOGFILE << "Just about to exit" << endl;
+
 	return;
 }

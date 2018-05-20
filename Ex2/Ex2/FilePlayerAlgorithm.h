@@ -11,7 +11,6 @@
 
 #include "Parser.h"
 #include "PlayerAlgorithm.h"
-#include "PlayerAlgorithm.h"
 #include "GameBoard.h"
 #include "Fight.h"
 #include "Commands.h"
@@ -23,6 +22,12 @@
 
 using namespace std;
 
+template<class T>
+void doNothing(T& t) {
+	if (sizeof t == 0) return;
+	else return;
+}
+
 class FilePlayerAlgorithm : public PlayerAlgorithm 
 {
 private:
@@ -31,9 +36,9 @@ private:
 
 public:
 	virtual void getInitialPositions(int player, std::vector<unique_ptr<PiecePosition>>& vectorToFill);
-	virtual void notifyOnInitialBoard(const Board& b, const std::vector<unique_ptr<FightInfo>>& fights) { };
-	virtual void notifyOnOpponentMove(const Move& move) { }; // called only on opponent’s move
-	virtual void notifyFightResult(const FightInfo& fightInfo) { }; // called only if there was a fight
+	virtual void notifyOnInitialBoard(const Board& b, const std::vector<unique_ptr<FightInfo>>& fights) { doNothing(b); doNothing(fights); };
+	virtual void notifyOnOpponentMove(const Move& move) { doNothing(move); }; // called only on opponent’s move
+	virtual void notifyFightResult(const FightInfo& fightInfo) { doNothing(fightInfo); }; // called only if there was a fight
 	
 	virtual unique_ptr<Move> getMove() { 
 		if (index >= moveCommands.size())

@@ -45,11 +45,14 @@ FightResult Piece::getFightResult(const Piece* other) const
 	if (other->type == type)
 		return FightDraw;
 
-	if (other->type == Bomb)
+	if (type == Bomb || other->type == Bomb)
 		return FightDraw;
 
 	if (other->type == Flag)
 		return FightWin;
+
+	if (type == Flag)
+		return FightLose;
 
 	if ((type == Rock && other->type == Scissors) ||
 		(type == Paper && other->type == Rock) ||
@@ -63,7 +66,6 @@ FightResult Piece::getFightResult(const Piece* other) const
 	}
 }
 
-// TODO: check if need to return capitalized or not (dependent on the player)
 char Piece::getPiece() const {
 	char res = getPieceTypeRep(type);
 

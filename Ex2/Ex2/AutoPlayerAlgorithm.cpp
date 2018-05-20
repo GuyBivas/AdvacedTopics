@@ -12,7 +12,7 @@ Position flipVertical(Position pos)
 }
 
 Position getRandomPos(map<Position, PieceType> positions) {
-	std::random_device rd;   
+	std::random_device rd;
 	std::mt19937 rng(rd());
 	std::uniform_int_distribution<int> uni(1, 10);
 
@@ -47,23 +47,23 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 		{ Position(3, 6), Joker },
 		{ Position(5, 7), Joker } };
 
-	if (playerNum == 2)
-	{
-		positions = {};
-		positions[getRandomPos(positions)] = Flag;
-		positions[getRandomPos(positions)] = Bomb;
-		positions[getRandomPos(positions)] = Bomb;
-		positions[getRandomPos(positions)] = Scissors;
-		positions[getRandomPos(positions)] = Rock;
-		positions[getRandomPos(positions)] = Rock;
-		positions[getRandomPos(positions)] = Paper;
-		positions[getRandomPos(positions)] = Paper;
-		positions[getRandomPos(positions)] = Paper;
-		positions[getRandomPos(positions)] = Paper;
-		positions[getRandomPos(positions)] = Paper;
-		positions[getRandomPos(positions)] = Joker;
-		positions[getRandomPos(positions)] = Joker;
-	}
+	//if (playerNum == 2)
+	//{
+	//	positions = {};
+	//	positions[getRandomPos(positions)] = Flag;
+	//	positions[getRandomPos(positions)] = Bomb;
+	//	positions[getRandomPos(positions)] = Bomb;
+	//	positions[getRandomPos(positions)] = Scissors;
+	//	positions[getRandomPos(positions)] = Rock;
+	//	positions[getRandomPos(positions)] = Rock;
+	//	positions[getRandomPos(positions)] = Paper;
+	//	positions[getRandomPos(positions)] = Paper;
+	//	positions[getRandomPos(positions)] = Paper;
+	//	positions[getRandomPos(positions)] = Paper;
+	//	positions[getRandomPos(positions)] = Paper;
+	//	positions[getRandomPos(positions)] = Joker;
+	//	positions[getRandomPos(positions)] = Joker;
+	//}
 
 	std::random_device rd;     // only used once to initialise (seed) engine
 	std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
@@ -78,11 +78,11 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 		Position pos = pair.first;
 
 		//if (horizontalFlip)
-		if (playerNum == 1)
+		if (playerNum == 2)
 			pos = flipHorizontal(pos);
 
 		//if (verticalFlip)
-		if (playerNum == 1)
+		if (playerNum == 2)
 			pos = flipVertical(pos);
 
 		vectorToFill.push_back(make_unique<Piece>((isJoker ? Scissors : pair.second), pos, playerNum, isJoker));
@@ -163,12 +163,14 @@ void AutoPlayerAlgorithm::notifyFightResult(const FightInfo& fightInfo)
 
 unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 {
+	//LOGFILE << "Entered AutoPlayerAlgorithm getMove, player " << playerNum << endl;
+	
 	unordered_map<MoveCommand, float> movesFrequency = {};
 	for (int i = 0; i < GUESS_AMOUNT; i++) {
 		GameBoard board = GameBoard();
 		board.setCurrPlayer(playerNum);
 		guessOpponentPieces(board);
-		pair<MoveCommand*, int> moveCmd = minimaxSuggestMove(board);
+		pair<MoveCommand*, float> moveCmd = minimaxSuggestMove(board);
 		float moveVal = 1;
 		if (moveCmd.second == WIN_SCORE) { // move that led to game win gets 1.5x in frequncy val
 			moveVal = 1.5;
@@ -188,19 +190,23 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 
 	lastMoveJokerChange = mostFrequentMove.getJokerTransform();
 	GameMove move = mostFrequentMove.getMove();
-	
+
 	playerBoard.movePiece(move);
 
 	unique_ptr<GameMove> res = make_unique<GameMove>(move);
+
+	//LOGFILE << "Exited AutoPlayerAlgorithm getMove, player " << playerNum << endl;
 
 	return res;
 }
 
 unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
 {
+	//LOGFILE << "Entered AutoPlayerAlgorithm getJokerChange, player " << playerNum << endl;
+	
 	if (lastMoveJokerChange.getRep() == -1)
 		return nullptr;
-	
+
 	Piece* piece = playerBoard[lastMoveJokerChange.getJokerChangePosition()];
 	if (piece->getIsJoker()) {
 		if (piece->getJokerRep() != lastMoveJokerChange.getJokerNewRep()) {
@@ -209,11 +215,15 @@ unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
 		}
 	}
 
+	//LOGFILE << "Exited AutoPlayerAlgorithm getJokerChange, player " << playerNum << endl;
+
 	return nullptr;
 }
 
 AlgoPiece* chooseWithProbability(map<AlgoPiece*, int> map)
 {
+	//LOGFILE << "Entered AutoPlayerAlgorithm chooseWithProbability" << endl;
+	
 	int sum = 0;
 	for (auto pair : map) {
 		sum += pair.second;
@@ -231,11 +241,15 @@ AlgoPiece* chooseWithProbability(map<AlgoPiece*, int> map)
 			return pair.first;
 	}
 
+	//LOGFILE << "Exited AutoPlayerAlgorithm chooseWithProbability" << endl;
+
 	return nullptr; // should not happen
 }
 
 PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty() const
 {
+	//LOGFILE << "Entered AutoPlayerAlgorithm choosePieceTypeProbabilty" << endl;
+	
 	map<PieceType, double> map = {};
 
 	map[Rock] = 1 / (enemyPieceCount.at(Rock) + 1 + JOKER_COUNT);
@@ -254,6 +268,8 @@ PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty() const
 		if (tempVal >= value)
 			return pair.first;
 	}
+
+	//LOGFILE << "Exited AutoPlayerAlgorithm choosePieceTypeProbabilty" << endl;
 
 	return (PieceType)-1; // should not happen
 }
@@ -276,7 +292,7 @@ void AutoPlayerAlgorithm::guessOpponentPiecesByType(GameBoard& toFill, PieceType
 			return;
 
 		AlgoPiece* chosen = chooseWithProbability(options);
-		Piece* copy = copyPiece(chosen);
+		AlgoPiece* copy = copyAlgoPiece(chosen);
 		copy->setType(type);
 		toFill.putPiece(copy);
 	}
@@ -291,13 +307,13 @@ void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill) const
 
 			AlgoPiece* enemyPiece = (AlgoPiece*)opponentBoard.getPieceAt(pos);
 			if (enemyPiece != nullptr && enemyPiece->getIsKnown()) {
-				Piece* copy = copyPiece(enemyPiece);
+				AlgoPiece* copy = copyAlgoPiece(enemyPiece);
 				toFill.putPiece(copy);
 			}
 
-			Piece* playerPiece = playerBoard.getPieceAt(pos);
+			AlgoPiece* playerPiece = (AlgoPiece*)playerBoard.getPieceAt(pos);
 			if (playerPiece != nullptr) {
-				Piece* copy = copyPiece(playerPiece);
+				AlgoPiece* copy = copyAlgoPiece(playerPiece);
 				toFill.putPiece(copy);
 			}
 		}
@@ -330,8 +346,16 @@ void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill) const
 	for (size_t i = 0; i < remainingPieces.size(); i++)
 	{
 		AlgoPiece* piece = remainingPieces[i];
-		Piece* copy = new Piece(*piece);
+		AlgoPiece* copy = copyAlgoPiece(piece);
 		copy->setType(choosePieceTypeProbabilty());
 		toFill.putPiece(copy);
 	}
+}
+
+AlgoPiece* copyAlgoPiece(AlgoPiece* piece)
+{
+	if (piece == nullptr)
+		return nullptr;
+
+	return new AlgoPiece(*piece);
 }

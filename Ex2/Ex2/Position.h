@@ -3,9 +3,14 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <fstream>
 #include "Point.h"
 #include "Move.h"
 
+
+/////////////////////////
+//extern std::ofstream LOGFILE;
+/////////////////////////
 #define ROWS 10
 #define COLS 10
 
@@ -46,6 +51,12 @@ public:
 	{
 		return Position(x + other.getX(), y + other.getY());
 	}
+
+	int distance(const Point& other) const
+	{
+		return (Position(x - other.getX(), y - other.getY())).magnitude(); // TODO: optimize
+	}
+
 
 	// absolute value on each coordinate - use Position as Vector2
 	Position abs()
