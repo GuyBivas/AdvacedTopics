@@ -66,6 +66,28 @@ int GameBoard::getOtherPlayer() const
 	return getOppositePlayer(currentPlayer);
 }
 
+int GameBoard::countPiecesScore(function<int(Piece*)> countFunc)
+{
+	int count = 0;
+
+	for (int i = 1; i <= ROWS; i++)	{
+		for (int j = 1; j <= COLS; j++) {
+			Position pos = Position(j, i);
+			Piece* piece = getPieceAt(pos);
+			if (piece != nullptr)
+				count += countFunc(piece);
+		}
+	}
+
+	return count;
+}
+
+int GameBoard::countPiecesIf(function<bool(Piece*)> conditionFunc)
+{
+	auto countFunc = [&](Piece* p) { return conditionFunc(p) ? 1 : 0; };
+	return countPiecesScore(countFunc);
+}
+
 GameMessage GameBoard::isValidMove(const GameMove& move)
 {
 	if (!containsCurrPlayerPiece(move.getFrom()))

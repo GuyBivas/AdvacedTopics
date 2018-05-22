@@ -1,6 +1,8 @@
 #include "AutoPlayerAlgorithm.h"
 #include <iostream>
 
+const std::vector<PieceType> jokerReps = { Rock, Paper, Scissors };
+
 Position flipHorizontal(Position pos)
 {
 	return Position(COLS + 1 - pos.getX(), pos.getY());
@@ -32,6 +34,7 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 	playerBoard.setCurrPlayer(player);
 	opponentBoard.setCurrPlayer(getOppositePlayer(player));
 
+	// TODO: put joker far from center so they will join the action when there is more knowledge
 	map<Position, PieceType> positions = {
 		{ Position(1, 8) , Flag },
 		{ Position(2, 8), Bomb },
@@ -47,27 +50,27 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 		{ Position(3, 6), Joker },
 		{ Position(5, 7), Joker } };
 
-	//if (playerNum == 2)
-	//{
-	//	positions = {};
-	//	positions[getRandomPos(positions)] = Flag;
-	//	positions[getRandomPos(positions)] = Bomb;
-	//	positions[getRandomPos(positions)] = Bomb;
-	//	positions[getRandomPos(positions)] = Scissors;
-	//	positions[getRandomPos(positions)] = Rock;
-	//	positions[getRandomPos(positions)] = Rock;
-	//	positions[getRandomPos(positions)] = Paper;
-	//	positions[getRandomPos(positions)] = Paper;
-	//	positions[getRandomPos(positions)] = Paper;
-	//	positions[getRandomPos(positions)] = Paper;
-	//	positions[getRandomPos(positions)] = Paper;
-	//	positions[getRandomPos(positions)] = Joker;
-	//	positions[getRandomPos(positions)] = Joker;
-	//}
+	//if (playerNum == 0)
+	{
+		positions = {};
+		positions[getRandomPos(positions)] = Flag;
+		positions[getRandomPos(positions)] = Bomb;
+		positions[getRandomPos(positions)] = Bomb;
+		positions[getRandomPos(positions)] = Scissors;
+		positions[getRandomPos(positions)] = Rock;
+		positions[getRandomPos(positions)] = Rock;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Paper;
+		positions[getRandomPos(positions)] = Joker;
+		positions[getRandomPos(positions)] = Joker;
+	}
 
-	std::random_device rd;     // only used once to initialise (seed) engine
-	std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-	std::uniform_int_distribution<int> uni(0, 1); // guaranteed unbiased
+	std::random_device rd;
+	std::mt19937 rng(rd());
+	std::uniform_int_distribution<int> uni(0, 1);
 
 	bool horizontalFlip = (uni(rng) == 0);
 	bool verticalFlip = (uni(rng) == 0);
@@ -77,10 +80,12 @@ void AutoPlayerAlgorithm::getInitialPositions(int player, std::vector<unique_ptr
 		bool isJoker = (pair.second == Joker);
 		Position pos = pair.first;
 
-		if (horizontalFlip)
+		//if (horizontalFlip)
+		if (playerNum == 2)
 			pos = flipHorizontal(pos);
 
-		if (verticalFlip)
+		//if (verticalFlip)
+		if (playerNum == 1)
 			pos = flipVertical(pos);
 
 		vectorToFill.push_back(make_unique<Piece>((isJoker ? Scissors : pair.second), pos, playerNum, isJoker));
@@ -159,19 +164,62 @@ void AutoPlayerAlgorithm::notifyFightResult(const FightInfo& fightInfo)
 	}
 }
 
+int AutoPlayerAlgorithm::calcMinimaxDepth()
+{
+	int depth = 2;
+
+	GameBoard board = GameBoard();
+	guessOpponentPieces(board);
+
+	auto isMoving = [](Piece* p) { return p->getIsMovingPiece(); };
+	auto isJoker = [](Piece* p) { return p->getIsJoker(); };
+
+	int movingCount1 = playerBoard.countPiecesIf(isMoving);
+	int jokersCount1 = playerBoard.countPiecesIf(isJoker);
+	int movingCount2 = board.countPiecesIf(([&](Piece* p) { return isMoving(p) && p->getPlayerNum() != playerNum; }));
+	//int jokersCount2 = board.countPiecesIf(([&](Piece* p) { return isJoker(p) && p->getPlayerNum() != playerNum; })); // this is 0
+
+	int minimaxHardness = (movingCount1 * (jokersCount1 + 1)) * (movingCount2 * (jokersCount1 + 1)); // (4^moving)*(3^jokers) is better
+
+	if (minimaxHardness <= 16)
+		depth = 7;
+	else if (minimaxHardness <= 84)
+		depth = 5;
+	else if (minimaxHardness <= 640)
+		depth = 3;
+	else if (minimaxHardness <= 900)
+		depth = 2;
+
+	//if (pieceCount <= 17)
+	//	depth = 3;
+
+	//if (pieceCount <= 10)
+	//	depth = 5;
+
+	//if (pieceCount <= 5)
+	//	depth = 7;
+
+	return depth;
+}
+
 unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 {
-	//LOGFILE << "Entered AutoPlayerAlgorithm getMove, player " << playerNum << endl;
-	
+	int d = calcMinimaxDepth();
+
 	unordered_map<MoveCommand, float> movesFrequency = {};
-	for (int i = 0; i < GUESS_AMOUNT; i++) {
+	for (int i = 0; i < (playerNum == 1 ? 1 : 1); i++) {
 		GameBoard board = GameBoard();
 		board.setCurrPlayer(playerNum);
 		guessOpponentPieces(board);
-		pair<MoveCommand*, float> moveCmd = minimaxSuggestMove(board);
+
+		pair<MoveCommand*, float> moveCmd = minimaxSuggestMove(board, (playerNum == 1 ? 1 : 1));
+		moveCmd.first->setJokerTransform(JokerTransform(Position(-1, -1), (PieceType)-1));
 		float moveVal = 1;
 		if (moveCmd.second == WIN_SCORE) { // move that led to game win gets 1.5x in frequncy val
-			moveVal = 1.5;
+			moveVal = 1.4;
+		}
+		if (moveCmd.second == -WIN_SCORE) {
+			moveVal = 0.1;
 		}
 
 		movesFrequency[*(moveCmd.first)] += moveVal;
@@ -183,6 +231,7 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 	for (auto move : movesFrequency) {
 		if (move.second > maxFrequency) {
 			mostFrequentMove = move.first;
+			maxFrequency = move.second;
 		}
 	}
 
@@ -193,15 +242,56 @@ unique_ptr<Move> AutoPlayerAlgorithm::getMove()
 
 	unique_ptr<GameMove> res = make_unique<GameMove>(move);
 
-	//LOGFILE << "Exited AutoPlayerAlgorithm getMove, player " << playerNum << endl;
-
 	return res;
 }
 
+//unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
+//{
+//	unordered_map<MoveCommand, float> movesFrequency = {};
+//
+//	for (int i = 0; i < 10; i++) {
+//		GameBoard board = GameBoard();
+//		board.setCurrPlayer(playerNum);
+//		guessOpponentPieces(board);
+//
+//	for (Position jokerPos : jokerPositions) {
+//		for (PieceType newType : jokerReps) {
+//			gameCopy->changeJoker(jokerPos, newType);
+//
+//		pair<MoveCommand*, float> moveCmd = minimaxSuggestMove(board, (playerNum == 1 ? 1 : 1));
+//		moveCmd.first->setJokerTransform(JokerTransform(Position(-1, -1), (PieceType)-1));
+//		float moveVal = 1;
+//		if (moveCmd.second == WIN_SCORE) { // move that led to game win gets 1.5x in frequncy val
+//			moveVal = 1.4;
+//		}
+//		if (moveCmd.second == -WIN_SCORE) {
+//			moveVal = 0.1;
+//		}
+//
+//		movesFrequency[*(moveCmd.first)] += moveVal;
+//		delete(moveCmd.first);
+//	}
+//
+//	float maxFrequency = movesFrequency.begin()->second;
+//	MoveCommand mostFrequentMove = movesFrequency.begin()->first;
+//	for (auto move : movesFrequency) {
+//		if (move.second > maxFrequency) {
+//			mostFrequentMove = move.first;
+//			maxFrequency = move.second;
+//		}
+//	}
+//
+//	GameMove move = mostFrequentMove.getMove();
+//
+//	playerBoard.movePiece(move);
+//
+//	unique_ptr<GameMove> res = make_unique<GameMove>(move);
+//
+//	return res;
+//}
+
 unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
 {
-	//LOGFILE << "Entered AutoPlayerAlgorithm getJokerChange, player " << playerNum << endl;
-	
 	if (lastMoveJokerChange.getRep() == -1)
 		return nullptr;
 
@@ -213,15 +303,11 @@ unique_ptr<JokerChange> AutoPlayerAlgorithm::getJokerChange()
 		}
 	}
 
-	//LOGFILE << "Exited AutoPlayerAlgorithm getJokerChange, player " << playerNum << endl;
-
 	return nullptr;
 }
 
 AlgoPiece* chooseWithProbability(map<AlgoPiece*, int> map)
 {
-	//LOGFILE << "Entered AutoPlayerAlgorithm chooseWithProbability" << endl;
-	
 	int sum = 0;
 	for (auto pair : map) {
 		sum += pair.second;
@@ -239,15 +325,11 @@ AlgoPiece* chooseWithProbability(map<AlgoPiece*, int> map)
 			return pair.first;
 	}
 
-	//LOGFILE << "Exited AutoPlayerAlgorithm chooseWithProbability" << endl;
-
 	return nullptr; // should not happen
 }
 
 PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty() const
 {
-	//LOGFILE << "Entered AutoPlayerAlgorithm choosePieceTypeProbabilty" << endl;
-	
 	map<PieceType, double> map = {};
 
 	map[Rock] = 1 / (enemyPieceCount.at(Rock) + 1 + JOKER_COUNT);
@@ -266,8 +348,6 @@ PieceType AutoPlayerAlgorithm::choosePieceTypeProbabilty() const
 		if (tempVal >= value)
 			return pair.first;
 	}
-
-	//LOGFILE << "Exited AutoPlayerAlgorithm choosePieceTypeProbabilty" << endl;
 
 	return (PieceType)-1; // should not happen
 }
@@ -296,7 +376,7 @@ void AutoPlayerAlgorithm::guessOpponentPiecesByType(GameBoard& toFill, PieceType
 	}
 }
 
-void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill) const
+void AutoPlayerAlgorithm::guessOpponentPieces(GameBoard& toFill, bool onlyJokers) const
 {
 	// fill known pieces:
 	for (int col = 1; col <= COLS; col++) {

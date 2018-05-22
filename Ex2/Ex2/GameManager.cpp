@@ -1,6 +1,6 @@
 #include "GameManager.h"
-//#include <iostream>		//TODO: remove
-//#include <windows.h>	// WinApi header
+#include <iostream>		//TODO: remove
+#include <windows.h>	// WinApi header
 
 bool GameManager::placePlayerPieces(GameBoard& board, PlayerAlgorithm& player, int playerNum) {
 	vector<unique_ptr<PiecePosition>> vectorToFill;
@@ -191,9 +191,41 @@ bool GameManager::getJokerChange(int playerNum)
 	return false;
 }
 
+void PrintPretyBoard(GameBoard& board, HANDLE hConsole)
+{
+	return;
+	char res[ROWS * (COLS + 1) + 1];
+	int index = 0;
+
+	for (int i = 1; i <= ROWS; i++)
+	{
+		for (int j = 1; j <= COLS; j++)
+		{
+			Position point = Position(j, i);
+			Piece* p = board.getPieceAt(point);
+			//int flag = (p->getType() == Flag) ? 1 : 0;
+			bool flag = (p != nullptr && p->getType() == Flag | p->getIsJoker());
+			SetConsoleTextAttribute(hConsole, (flag ? (BACKGROUND_INTENSITY | (board.getPlayer(point) + 10)) : board.getPlayer(point) + 10));
+			//SetConsoleTextAttribute(hConsole, board.getPlayer(point) + 10);
+			
+			cout << ((p != nullptr && p->getIsJoker()) ?
+				getPieceTypeRep(p->getType()) :
+				board.getPosRep(point));
+		}
+
+		cout << '\n';
+	}
+
+	cout << endl << endl << endl << endl;
+}
+
+static int tiee = 0;
+static int win1 = 0;
+static int win2 = 0;
+
 void GameManager::runGame()
 {
-	//HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	bool gameOver;
 	bool hasLastPlayerMoved = true;
@@ -202,14 +234,20 @@ void GameManager::runGame()
 	if (gameOver)
 		return;
 
+	if (board.isGameOver()) {
+		return;
+	}
+
 	while (!board.isGameOver()) {
 		//getchar();
 		//LOGFILE << "New turn in runGame" << endl;
-		
+
 		//SetConsoleTextAttribute(hConsole, board.getCurrentPlayer() + 10);
 
 		//if (board.getCurrentPlayer() == 1)
 		//cout << board.getBoardRep() << endl << endl;
+		PrintPretyBoard(board, hConsole);
+
 		pair<bool, bool> res = applyMove(board.getCurrentPlayer());
 		gameOver = res.first;
 
@@ -248,40 +286,82 @@ void GameManager::runGame()
 	}
 
 	//LOGFILE << "Exited while loop in runGame" << endl;
+	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
 
 	GameStatus status = board.getGameStatus();
 	switch (status)
 	{
 	case StatusPlayer1FlagsCaptured:
-		outFile << "Winner: 2" << endl;
-		outFile << "Reason: All flags of the opponent are captured" << endl;
+		win2++;
+		cout << "Winner: 2" << endl;
+		cout << "Reason: All flags of the opponent are captured" << endl;
 		break;
 	case StatusPlayer2FlagsCaptured:
-		outFile << "Winner: 1" << endl;
-		outFile << "Reason: All flags of the opponent are captured" << endl;
+		win1++;
+		cout << "Winner: 1" << endl;
+		cout << "Reason: All flags of the opponent are captured" << endl;
 		break;
 	case StatusBothFlagsCaptured:
-		outFile << "Winner: 0" << endl;
-		outFile << "Reason: A tie - all flags are eaten by both players in the position files" << endl;
+		tiee++;
+		cout << "Winner: 0" << endl;
+		cout << "Reason: A tie - all flags are eaten by both players in the position files" << endl;
 		break;
 	case StatusPlayer1NoMovingPieces:
-		outFile << "Winner: 2" << endl;
-		outFile << "Reason: All moving PIECEs of the opponent are eaten" << endl;
+		win2++;
+		cout << "Winner: 2" << endl;
+		cout << "Reason: All moving PIECEs of the opponent are eaten" << endl;
 		break;
 	case StatusPlayer2NoMovingPieces:
-		outFile << "Winner: 1" << endl;
-		outFile << "Reason: All moving PIECEs of the opponent are eaten" << endl;
+		win1++;
+		cout << "Winner: 1" << endl;
+		cout << "Reason: All moving PIECEs of the opponent are eaten" << endl;
 		break;
 	case StatusBothPlayersNoMovingPieces:
-		outFile << "Winner: 0" << endl;
-		outFile << "Reason: A tie - all moving PIECEs are eaten" << endl;
+		tiee++;
+		cout << "Winner: 0" << endl;
+		cout << "Reason: A tie - all moving PIECEs are eaten" << endl;
 		break;
 	default:
-		outFile << "Winner: 0" << endl;
-		outFile << "Reason: A tie - all moving PIECEs are eaten" << endl;
+		tiee++;
+		cout << "Winner: 0" << endl;
+		cout << "Reason: A tie - all moving PIECEs are eaten" << endl;
 	}
 
+	//GameStatus status = board.getGameStatus();
+	//switch (status)
+	//{
+	//case StatusPlayer1FlagsCaptured:
+	//	outFile << "Winner: 2" << endl;
+	//	outFile << "Reason: All flags of the opponent are captured" << endl;
+	//	break;
+	//case StatusPlayer2FlagsCaptured:
+	//	outFile << "Winner: 1" << endl;
+	//	outFile << "Reason: All flags of the opponent are captured" << endl;
+	//	break;
+	//case StatusBothFlagsCaptured:
+	//	outFile << "Winner: 0" << endl;
+	//	outFile << "Reason: A tie - all flags are eaten by both players in the position files" << endl;
+	//	break;
+	//case StatusPlayer1NoMovingPieces:
+	//	outFile << "Winner: 2" << endl;
+	//	outFile << "Reason: All moving PIECEs of the opponent are eaten" << endl;
+	//	break;
+	//case StatusPlayer2NoMovingPieces:
+	//	outFile << "Winner: 1" << endl;
+	//	outFile << "Reason: All moving PIECEs of the opponent are eaten" << endl;
+	//	break;
+	//case StatusBothPlayersNoMovingPieces:
+	//	outFile << "Winner: 0" << endl;
+	//	outFile << "Reason: A tie - all moving PIECEs are eaten" << endl;
+	//	break;
+	//default:
+	//	outFile << "Winner: 0" << endl;
+	//	outFile << "Reason: A tie - all moving PIECEs are eaten" << endl;
+	//}
+
 	outFile << endl << board.getBoardRep();
+	//cout << endl << board.getBoardRep();
+	PrintPretyBoard(board, hConsole);
 
 	//LOGFILE << "Just about to exit" << endl;
 

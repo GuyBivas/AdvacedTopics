@@ -2,7 +2,10 @@
 #define GAME_BOARD
 
 #include <string>
+#include <functional>  
+
 #include "Piece.h"
+#include "AlgoPiece.h"
 #include "GameMessage.h"
 #include "Board.h"
 
@@ -131,6 +134,9 @@ public:
 
 	// gets the other player (of the current player)
 	int getOtherPlayer() const;
+
+	int countPiecesScore(function<int(Piece*)> countFunc = ([](Piece* p) { return 1; }));
+	int countPiecesIf(function<bool(Piece*)> conditionFunc = nullptr);
 };
 
 int getOppositePlayer(int player);

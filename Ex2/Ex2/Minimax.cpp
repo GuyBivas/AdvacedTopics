@@ -3,9 +3,11 @@
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 
 int playerNumber;
+int minimaxDepth;
 
 const std::vector<Position> directions = { Position(-1,0), Position(1,0), Position(0,1), Position(0,-1) };
-const std::vector<PieceType> jokerReps = { Scissors, Paper, Rock };
+const std::vector<PieceType> jokerReps = { Rock, Paper, Scissors };
+//const std::vector<PieceType> jokerReps = { Scissors, Paper, Rock };
 
 vector<Position> getPlayersJokersPos(GameBoard* game) {
 	vector<Position> positions = {};
@@ -91,6 +93,21 @@ float calcBoardScore(GameBoard* game)
 				totalX2 += pos.getX();
 				totalY2 += pos.getY();
 			}
+
+			if (piece->getType() == Flag) {
+				// you prefer to be closer to your flag and of course the enemy's flag
+				int flagLove = 1;
+				pieceCount2 += flagLove;
+				totalX2 += flagLove * pos.getX();
+				totalY2 += flagLove * pos.getY();
+
+				for (Position direction : directions) {
+					Position to = pos + direction;
+					if (to.isInBoard() && game->getPieceAt(to) != nullptr && game->getPieceAt(to)->getPlayerNum() == (playerNumber == 1 ? 1 : 2)) {
+						score += 5 * playerNumber;
+					}
+				}
+			}
 		}
 	}
 
@@ -99,9 +116,12 @@ float calcBoardScore(GameBoard* game)
 	totalX2 /= pieceCount2;
 	totalY2 /= pieceCount2;
 
-	float avgDistance = abs(totalX1 - totalX2) + abs(totalY1 - totalY2);
+	float distanceX = abs(totalX1 - totalX2);
+	float distanceY = abs(totalY1 - totalY2);
+	float avgDistance = (distanceX* distanceX + distanceY * distanceY) / 5;
+	//cout << avgDistance << endl;
 
-	return score - avgDistance*playerNumber;
+	return score - avgDistance * playerNumber/2;
 }
 
 float getGameScore(GameBoard* game)
@@ -136,9 +156,7 @@ float getGameScore(GameBoard* game)
 
 float minimax(GameBoard* game, int depth, float a, float b, int color, MoveCommand* command)
 {
-	//LOGFILE << "Entered Minimax Level " << depth << endl;
-
-	if (depth == 0 || (game->isGameOver() && depth != MINIMAX_DEPTH)) {
+	if (depth == 0 || (game->isGameOver() && depth != minimaxDepth)) {
 		return getGameScore(game) * color;
 	}
 
@@ -154,24 +172,24 @@ float minimax(GameBoard* game, int depth, float a, float b, int color, MoveComma
 				for (Position direction : directions) { // go over all possible moves
 					Position to = pos + direction;
 					if (to.isInBoard() && (game->getPieceAt(to) == nullptr || game->getPieceAt(to)->getPlayerNum() != game->getCurrentPlayer())) {
-						//LOGFILE << "Minimax Level " << depth << " Entered if statement, before copy" << endl;
 						GameBoard* gameCopy = new GameBoard(*game);
 						GameMove move = GameMove(pos, to);
 						gameCopy->move(move);
 						gameCopy->setCurrPlayer(gameCopy->getOtherPlayer());
-						//LOGFILE << "Minimax Level " << depth << " Entered if statement, after copy" << endl;
+
 						// change joker
 						vector<Position> jokerPositions = {};
-						if (depth == MINIMAX_DEPTH)
-							jokerPositions = getPlayersJokersPos(game); 
+						//if (depth == minimaxDepth)
+						//	jokerPositions = getPlayersJokersPos(game);
+
 						if (jokerPositions.empty()) {
 							moveScore = -minimax(gameCopy, depth - 1, -b, -a, -color, command);
 							if (moveScore >= bestValue) {
-								std::random_device rd;
-								std::mt19937 rng(rd());
-								std::uniform_int_distribution<int> uni(0, 1);
-								if (moveScore > bestValue || bestValue == -INF_SCORE || uni(rng) == 0) {
-									if (depth == MINIMAX_DEPTH) { // update MoveCommand
+								if (depth == minimaxDepth) { // update MoveCommand
+									std::random_device rd;
+									std::mt19937 rng(rd());
+									std::uniform_int_distribution<int> uni(0, 1); // depth is always max here...
+									if (moveScore > bestValue || bestValue == -INF_SCORE || uni(rng) == 0) {
 										command->setMove(move);
 										command->setJokerTransform(JokerTransform(Position(-1, -1), (PieceType)-1));
 									}
@@ -194,8 +212,8 @@ float minimax(GameBoard* game, int depth, float a, float b, int color, MoveComma
 									gameCopy->changeJoker(jokerPos, newType);
 									moveScore = -minimax(gameCopy, depth - 1, -b, -a, -color, command);
 									if (moveScore >= bestValue) {
-										if (depth == MINIMAX_DEPTH) { // update MoveCommand
-											std::random_device rd; 
+										if (depth == minimaxDepth) { // update MoveCommand
+											std::random_device rd;
 											std::mt19937 rng(rd());
 											std::uniform_int_distribution<int> uni(0, 1);
 											if (moveScore > bestValue || bestValue == -INF_SCORE || uni(rng) == 0) {
@@ -231,11 +249,10 @@ float minimax(GameBoard* game, int depth, float a, float b, int color, MoveComma
 	return bestValue;
 }
 
-std::pair<MoveCommand*, float> minimaxSuggestMove(GameBoard& game)
+std::pair<MoveCommand*, float> minimaxSuggestMove(GameBoard& game, int depth)
 {
-	//LOGFILE << "Entered minimaxSuggestMove" << endl;
-
 	playerNumber = (game.getCurrentPlayer() == 1 ? 1 : -1);
+	minimaxDepth = depth;
 
 	Position pos = Position(-1, -1);
 	GameMove move = GameMove(pos, pos);
@@ -243,9 +260,7 @@ std::pair<MoveCommand*, float> minimaxSuggestMove(GameBoard& game)
 	MoveCommand* command = new MoveCommand(move, jokerChange);
 
 	//int score = minimax(&game, MINIMAX_DEPTH, -INF_SCORE, INF_SCORE, 1, command);
-	float score = minimax(&game, MINIMAX_DEPTH, -INF_SCORE, INF_SCORE, (game.getCurrentPlayer() == 1 ? 1 : -1), command);
-
-	//LOGFILE << "Exited minimaxSuggestMove" << endl;
+	float score = minimax(&game, minimaxDepth, -INF_SCORE, INF_SCORE, (game.getCurrentPlayer() == 1 ? 1 : -1), command);
 
 	return std::pair<MoveCommand*, float>(command, score);
 }

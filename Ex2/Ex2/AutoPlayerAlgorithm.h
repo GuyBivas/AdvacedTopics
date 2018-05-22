@@ -14,7 +14,8 @@
 #include "Fight.h"
 #include "Minimax.h"
 
-#define GUESS_AMOUNT 8
+#define GUESS_AMOUNT 1
+#define MINIMAX_DEPTH 3
 
 using namespace std;
 
@@ -33,8 +34,9 @@ private:
 
 
 	void guessOpponentPiecesByType(GameBoard& toFill, PieceType type, function<bool(AlgoPiece*)> condition, function<int(AlgoPiece*)> probabilty) const;
-	void guessOpponentPieces(GameBoard& toFill) const;
+	void guessOpponentPieces(GameBoard& toFill, bool onlyJokers = false) const;
 	PieceType choosePieceTypeProbabilty() const;
+	int calcMinimaxDepth();
 
 public:
 	AutoPlayerAlgorithm() {}

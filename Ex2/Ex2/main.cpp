@@ -14,6 +14,8 @@
 
 int main(int argc, char* argv[])
 {
+while (true)
+{
 	if (argc != 2) {
 		cout << "Expected 1 argument (type of game). Recieved " << argc - 1 << "." << endl;
 		return EXIT_FAILURE;
@@ -63,5 +65,8 @@ int main(int argc, char* argv[])
 	delete(player1);
 	delete(player2);
 
-	return EXIT_SUCCESS;
+	//getchar();
+
+	//return EXIT_SUCCESS;
+}
 }
