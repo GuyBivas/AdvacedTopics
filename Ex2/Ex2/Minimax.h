@@ -21,10 +21,10 @@
 #define PAPER_SCORE 25
 #define ROCK_SCORE 30
 #define SCISSORS_SCORE 40
-#define BOMB_SCORE 15
+#define BOMB_SCORE (15 + 11)
 #define JOKER_SCORE 60
 #define FLAG_SCORE 1000
 
-std::pair<MoveCommand*, float> minimaxSuggestMove(GameBoard& game, int depth);
+std::pair<MoveCommand*, float> minimaxSuggestMove(GameBoard& game, int depth, bool skipMinNodes = true, bool tryJokerPermutations = true);
 
 #endif

@@ -2,6 +2,7 @@
 #define GAME_BOARD
 
 #include <string>
+#include <vector>
 #include <functional>  
 
 #include "Piece.h"
@@ -16,7 +17,7 @@ using namespace std;
 #define PAPER_COUNT 5
 #define SCISSORS_COUNT 1
 #define BOMB_COUNT 2
-#define JOKER_COUNT 2
+#define JOKER_COUNT 2 + 8
 #define FLAG_COUNT 1
 
 // end game reasons (and normal status)
@@ -67,6 +68,8 @@ public:
 
 	// return enum indicating whether game is over and by what reason
 	GameStatus getGameStatus() const;
+
+	vector<Position> getPlayersJokersPos();
 
 	// treat joker representation change
 	GameMessage changeJoker(Point& jokerPos, PieceType newRep);
@@ -135,8 +138,8 @@ public:
 	// gets the other player (of the current player)
 	int getOtherPlayer() const;
 
-	int countPiecesScore(function<int(Piece*)> countFunc = ([](Piece* p) { return 1; }));
-	int countPiecesIf(function<bool(Piece*)> conditionFunc = nullptr);
+	int countPiecesScore(function<int(Piece*)> countFunc = ([](Piece* p) { return 1; })) const;
+	int countPiecesIf(function<bool(Piece*)> conditionFunc = nullptr) const;
 };
 
 int getOppositePlayer(int player);

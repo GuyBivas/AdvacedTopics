@@ -6,7 +6,9 @@
 #include <fstream>
 #include <map>
 
+//#include "PlayerAlgorithm.h"
 #include "FilePlayerAlgorithm.h"
+#include "AutoPlayerAlgorithm.h"
 #include "Fight.h"
 #include "Parser.h"
 #include "GameBoard.h"
@@ -41,5 +43,7 @@ public:
 
 	void runGame(); // controls the flow of the game
 };
+
+//void PrintPretyBoard(GameBoard& board, HANDLE hConsole, PlayerAlgorithm& pl);
 
 #endif

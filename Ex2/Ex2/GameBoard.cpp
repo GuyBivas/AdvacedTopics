@@ -66,7 +66,7 @@ int GameBoard::getOtherPlayer() const
 	return getOppositePlayer(currentPlayer);
 }
 
-int GameBoard::countPiecesScore(function<int(Piece*)> countFunc)
+int GameBoard::countPiecesScore(function<int(Piece*)> countFunc) const
 {
 	int count = 0;
 
@@ -82,9 +82,9 @@ int GameBoard::countPiecesScore(function<int(Piece*)> countFunc)
 	return count;
 }
 
-int GameBoard::countPiecesIf(function<bool(Piece*)> conditionFunc)
+int GameBoard::countPiecesIf(function<bool(Piece*)> conditionFunc) const
 {
-	auto countFunc = [&](Piece* p) { return conditionFunc(p) ? 1 : 0; };
+	auto countFunc = [conditionFunc](Piece* p) { return conditionFunc(p) ? 1 : 0; };
 	return countPiecesScore(countFunc);
 }
 
@@ -217,6 +217,24 @@ GameStatus GameBoard::getGameStatus() const
 	else
 		return StatusNormal;
 
+}
+
+vector<Position> GameBoard::getPlayersJokersPos()
+{
+	vector<Position> positions = {};
+
+	for (int i = 1; i <= ROWS; i++) {
+		for (int j = 1; j <= COLS; j++) {
+			Piece* piece = getPieceAt(j, i);
+
+			if ((piece != nullptr) && (piece->getPlayerNum() == getCurrentPlayer()) && (piece->getIsJoker())) {
+				Position pos = Position(j, i);
+				positions.push_back(pos);
+			}
+		}
+	}
+
+	return positions;
 }
 
 GameBoard::GameBoard()

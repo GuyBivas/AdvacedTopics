@@ -22,7 +22,6 @@ using namespace std;
 class AutoPlayerAlgorithm : public PlayerAlgorithm {
 private:
 	GameBoard playerBoard;
-	GameBoard opponentBoard;
 	int playerNum;
 	map<PieceType, int> enemyPieceCount = {
 		{ Rock, ROCK_COUNT },
@@ -35,10 +34,12 @@ private:
 
 	void guessOpponentPiecesByType(GameBoard& toFill, PieceType type, function<bool(AlgoPiece*)> condition, function<int(AlgoPiece*)> probabilty) const;
 	void guessOpponentPieces(GameBoard& toFill, bool onlyJokers = false) const;
+	//int flagProbabilty(AlgoPiece* p) const;
 	PieceType choosePieceTypeProbabilty() const;
 	int calcMinimaxDepth();
 
 public:
+	GameBoard opponentBoard;
 	AutoPlayerAlgorithm() {}
 	virtual void getInitialPositions(int player, std::vector<unique_ptr<PiecePosition>>& vectorToFill) override;
 	virtual void notifyOnInitialBoard(const Board& b, const std::vector<unique_ptr<FightInfo>>& fights) override;
@@ -48,8 +49,10 @@ public:
 	virtual unique_ptr<JokerChange> getJokerChange(); // nullptr if no change is requested
 	virtual ~AutoPlayerAlgorithm() { }
 };
+#include <functional>  
 
 AlgoPiece* copyAlgoPiece(AlgoPiece* piece);
+int flagProbabilty(const GameBoard* opponentBoard, AlgoPiece* piece);
 
 
 #endif

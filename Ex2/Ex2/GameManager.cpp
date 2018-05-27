@@ -191,23 +191,37 @@ bool GameManager::getJokerChange(int playerNum)
 	return false;
 }
 
-void PrintPretyBoard(GameBoard& board, HANDLE hConsole)
+void PrintPretyBoard(GameBoard& board, HANDLE hConsole, PlayerAlgorithm& pl)
 {
-	return;
-	char res[ROWS * (COLS + 1) + 1];
-	int index = 0;
-
+	//return;
 	for (int i = 1; i <= ROWS; i++)
 	{
 		for (int j = 1; j <= COLS; j++)
 		{
 			Position point = Position(j, i);
-			Piece* p = board.getPieceAt(point);
-			//int flag = (p->getType() == Flag) ? 1 : 0;
-			bool flag = (p != nullptr && p->getType() == Flag | p->getIsJoker());
+			Piece* p = ((AutoPlayerAlgorithm&)pl).opponentBoard.getPieceAt(point);
+			if (p != nullptr)
+			{
+				bool flag = (p != nullptr && (p->getType() == Flag || p->getIsJoker()));
+				SetConsoleTextAttribute(hConsole, (flag ? (BACKGROUND_INTENSITY | (board.getPlayer(point) + 10)) : board.getPlayer(point) + 10));
+
+				//cout << getPieceTypeRep(((AlgoPiece*)p)->getType());
+				if (((AlgoPiece*)p)->getIsKnown())
+					cout << ((p != nullptr && p->getIsJoker()) ?
+						getPieceTypeRep(p->getType()) :
+						((AutoPlayerAlgorithm&)pl).opponentBoard.getPosRep(point));
+				else
+					cout << "?";
+
+				continue;
+			}
+
+			p = board.getPieceAt(point);
+			//Piece* p = board.getPieceAt(point);
+			bool flag = (p != nullptr && (p->getType() == Flag || p->getIsJoker()));
 			SetConsoleTextAttribute(hConsole, (flag ? (BACKGROUND_INTENSITY | (board.getPlayer(point) + 10)) : board.getPlayer(point) + 10));
-			//SetConsoleTextAttribute(hConsole, board.getPlayer(point) + 10);
-			
+
+			//cout << (p == nullptr ? "" : ("" + ((AlgoPiece*)p)->getFlagChance()));
 			cout << ((p != nullptr && p->getIsJoker()) ?
 				getPieceTypeRep(p->getType()) :
 				board.getPosRep(point));
@@ -216,7 +230,32 @@ void PrintPretyBoard(GameBoard& board, HANDLE hConsole)
 		cout << '\n';
 	}
 
-	cout << endl << endl << endl << endl;
+	cout << endl << endl << endl;
+	//cout << endl << "----------" << endl << endl;
+}
+
+void PrintPretyBoard(GameBoard& board, HANDLE hConsole)
+{
+	//return;
+	for (int i = 1; i <= ROWS; i++)
+	{
+		for (int j = 1; j <= COLS; j++)
+		{
+			Position point = Position(j, i);
+			Piece* p = board.getPieceAt(point);
+			//Piece* p = board.getPieceAt(point);
+			bool flag = (p != nullptr && (p->getType() == Flag || p->getIsJoker()));
+			SetConsoleTextAttribute(hConsole, (flag ? (BACKGROUND_INTENSITY | (board.getPlayer(point) + 10)) : board.getPlayer(point) + 10));
+
+			cout << ((p != nullptr && p->getIsJoker()) ?
+				getPieceTypeRep(p->getType()) :
+				board.getPosRep(point));
+		}
+
+		cout << '\n';
+	}
+
+	cout << endl << endl << endl;
 }
 
 static int tiee = 0;
@@ -235,18 +274,15 @@ void GameManager::runGame()
 		return;
 
 	if (board.isGameOver()) {
+		cout << "over" << endl;
 		return;
 	}
 
 	while (!board.isGameOver()) {
 		//getchar();
-		//LOGFILE << "New turn in runGame" << endl;
 
-		//SetConsoleTextAttribute(hConsole, board.getCurrentPlayer() + 10);
-
-		//if (board.getCurrentPlayer() == 1)
-		//cout << board.getBoardRep() << endl << endl;
 		PrintPretyBoard(board, hConsole);
+		//PrintPretyBoard(board, hConsole, player1);
 
 		pair<bool, bool> res = applyMove(board.getCurrentPlayer());
 		gameOver = res.first;
@@ -267,6 +303,7 @@ void GameManager::runGame()
 		}
 
 		if (turnsSinceFight == MAX_TURNS_SINCE_FIGHT) {
+			tiee++;
 			outFile << "Winner: 0" << endl;
 			outFile << "Reason: Maximum amount of turns without fights reached" << endl; // TODO: make sure this is really what we need to print
 			outFile << endl << board.getBoardRep();
@@ -285,7 +322,6 @@ void GameManager::runGame()
 		board.setCurrPlayer(board.getOtherPlayer());
 	}
 
-	//LOGFILE << "Exited while loop in runGame" << endl;
 	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
 
 	GameStatus status = board.getGameStatus();
@@ -326,6 +362,8 @@ void GameManager::runGame()
 		cout << "Winner: 0" << endl;
 		cout << "Reason: A tie - all moving PIECEs are eaten" << endl;
 	}
+
+	cout << "score: " << win1 << "-" << win2 << " (" << tiee << ")" << endl << endl;
 
 	//GameStatus status = board.getGameStatus();
 	//switch (status)

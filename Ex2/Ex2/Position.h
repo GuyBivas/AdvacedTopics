@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <fstream>
+#include <algorithm>
+
 #include "Point.h"
 #include "Move.h"
 
@@ -11,6 +13,7 @@
 /////////////////////////
 //extern std::ofstream LOGFILE;
 /////////////////////////
+
 #define ROWS 10
 #define COLS 10
 
@@ -57,6 +60,15 @@ public:
 		return (Position(x - other.getX(), y - other.getY())).magnitude(); // TODO: optimize
 	}
 
+	int distanceFromCenter() const
+	{
+		return distance(Position(ROWS / 2, COLS / 2));
+	}
+
+	int distanceFromCorner() const
+	{
+		return (ROWS + COLS) / 2 + distanceFromCenter();
+	}
 
 	// absolute value on each coordinate - use Position as Vector2
 	Position abs()
@@ -72,9 +84,14 @@ public:
 	}
 
 	// check that x and y are within the board
-	bool isInBoard(int rows = ROWS, int cols = COLS) const
+	bool isInBoard() const
 	{
-		return (x <= cols && y <= rows && x > 0 && y > 0);
+		return (x <= ROWS && y <= COLS && x > 0 && y > 0);
+	}
+
+	int isOnSide() const
+	{
+		return std::min({ x, ROWS - x, y, COLS - y }) == 0;
 	}
 
 	bool operator<(const Position& o2) const {
@@ -97,6 +114,7 @@ private:
 
 public:
 	GameMove(Point& _from, Point& _to) : from(_from), to(_to) {};
+	GameMove(Position _from, Position _to) : from(_from), to(_to) {};
 
 	void operator=(const GameMove& other) {
 		from = other.getFrom();

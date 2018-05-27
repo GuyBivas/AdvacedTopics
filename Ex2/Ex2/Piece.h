@@ -48,6 +48,11 @@ public:
 	// get the result of a fight between this and other piece (win\lose\draw)
 	virtual FightResult getFightResult(const Piece* other) const;
 
+	int distance(const Piece& other) const
+	{
+		return pos.distance(other.pos);
+	}
+
 	// setters
 	virtual void setPos(const Point& _pos) { pos = _pos; };
 	virtual void setType(PieceType _type) { type = _type; };

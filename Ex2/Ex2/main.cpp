@@ -65,7 +65,7 @@ while (true)
 	delete(player1);
 	delete(player2);
 
-	//getchar();
+	getchar();
 
 	//return EXIT_SUCCESS;
 }

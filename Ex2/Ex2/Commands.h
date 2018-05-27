@@ -83,7 +83,9 @@ namespace std
 		size_t operator()(const MoveCommand& move) const
 		{
 			// Compute individual hash values for two data members and combine them using XOR and bit shifting
-			return ((hash<int>()(move.getMove().getFrom().getX()) ^ (hash<int>()(move.getMove().getTo().getY()) << 1)) >> 1);
+			auto moveHash = ((hash<int>()(move.getMove().getFrom().getX()) ^ (hash<int>()(move.getMove().getTo().getY()) << 1)) >> 1);
+			auto jokerposHash = ((hash<int>()(move.getJokerPos().getX()) ^ (hash<int>()(move.getJokerPos().getY()) << 1)) >> 1);
+			return (moveHash ^ jokerposHash);// +move.getJokerNewRep;
 		}
 	};
 }
